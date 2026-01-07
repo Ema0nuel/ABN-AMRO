@@ -1,0 +1,653 @@
+/* Prevent body scroll and zoom */
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-size: 15px;
+  font-weight: 500;
+  overflow: hidden; /* lock browser scroll */
+  touch-action: manipulation; /* disable double-tap zoom and gestures */
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-user-select: none;
+  font-family: "Montserrat", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, "Noto Color Emoji", sans-serif;
+}
+
+/* Ensure viewport scaling is locked */
+meta[name="viewport"] {
+  content: "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no";
+}
+
+/* Input fields: prevent zoom on focus for iOS */
+input,
+textarea,
+select {
+  font-size: 16px; /* iOS automatically zooms inputs <16px */
+  outline: none;
+  -webkit-appearance: none;
+}
+
+/* Links and buttons: remove tap highlight */
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+}
+
+/* Smooth font rendering */
+* {
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ✅ FIXED: Enable scrolling on #root while keeping page locked */
+#root {
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  background-color: #fff;
+  overflow-y: auto; /* ✅ Enable vertical scroll */
+  overflow-x: hidden; /* ✅ Hide horizontal scroll */
+  -webkit-overflow-scrolling: touch; /* ✅ Smooth iOS scroll */
+}
+
+/* ✅ Hide scrollbar (visual), keep scrolling functional */
+#root::-webkit-scrollbar {
+  /* display: none; */
+}
+
+#root {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: 0.2px; /* Firefox */
+}
+
+/* Optional: fullscreen for main app container - remove if using separate scroll container */
+.view-container {
+  width: 100%;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- Animation Keyframes for smooth rendering --- */
+
+/* Fade in effect */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Slide in from the right */
+@keyframes slideInFromRight {
+  from {
+    transform: translateX(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* --- Animation Classes --- */
+
+/*
+  You can add the .view-container class to your main content area.
+  On initial load, it will fade and slide in smoothly.
+*/
+.view-container {
+  animation: fadeIn 0.5s ease-in-out, slideInFromRight 0.5s ease-in-out;
+}
+
+/*
+  For view transitions (if you are using a router), you would typically
+  add and remove classes dynamically with JavaScript.
+
+  Example:
+  - Add 'view-enter' when a new view comes in.
+  - Add 'view-exit' when an old view goes out.
+*/
+
+/**
+ * Translation Widget Styles
+ * ========================
+ * Handles custom styling and hiding of Google Translate widget
+ */
+
+/* ========== HIDE ORIGINAL GOOGLE TRANSLATE WIDGET ========== */
+
+#google_translate_element,
+.VIpgJd-ZVi9od-ORHb {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  width: 0 !important;
+  position: absolute !important;
+  pointer-events: none !important;
+  overflow: hidden !important;
+}
+
+/* Google Translate Banner */
+.goog-te-banner {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Google Translate Gadget */
+.goog-te-gadget {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  font-family: inherit !important;
+  color: inherit !important;
+  background: transparent !important;
+}
+
+/* Google Translate Combo Box */
+.goog-te-combo {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Remove Top Margin Added by Google Translate */
+body,
+body.translated-ltr,
+body.translated-rtl {
+  top: 0 !important;
+  margin-top: 0 !important;
+}
+
+/* Google Translate Button */
+.goog-te-gadget .goog-te-combo {
+  display: none !important;
+}
+
+/* ========== CUSTOM WIDGET STYLES ========== */
+
+/* Widget Container */
+.translate-widget-container {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 1.5rem;
+  z-index: 50;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Main Button */
+.translate-widget-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.translate-widget-button:hover {
+  box-shadow: 0 8px 20px rgba(0, 102, 204, 0.4);
+  transform: translateY(-2px);
+}
+
+.translate-widget-button:active {
+  transform: scale(0.98);
+}
+
+.translate-widget-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Flag Icon */
+.translate-widget-flag {
+  font-size: 1.125rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Language Menu */
+.translate-widget-menu {
+  position: absolute;
+  bottom: calc(100% + 0.75rem);
+  left: 0;
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  width: 14rem;
+  max-height: 20rem;
+  z-index: 51;
+}
+
+@media (min-width: 640px) {
+  .translate-widget-menu {
+    width: 14rem;
+  }
+}
+
+/* Menu Header */
+.translate-widget-menu-header {
+  background: linear-gradient(135deg, #f0f4ff 0%, #e6ecff 100%);
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Menu Items Container */
+.translate-widget-menu-items {
+  overflow-y: auto;
+  max-height: 16rem;
+}
+
+.translate-widget-menu-items::-webkit-scrollbar {
+  width: 6px;
+}
+
+.translate-widget-menu-items::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.translate-widget-menu-items::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.translate-widget-menu-items::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Language Option */
+.translate-widget-lang-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid #f3f4f6;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: #374151;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.translate-widget-lang-option:last-child {
+  border-bottom: none;
+}
+
+.translate-widget-lang-option:hover:not(:disabled) {
+  background-color: #f9fafb;
+  padding-left: 1.25rem;
+}
+
+.translate-widget-lang-option:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.translate-widget-lang-option.active {
+  background-color: #dbeafe;
+  color: #1e40af;
+  font-weight: 600;
+}
+
+.translate-widget-lang-option:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Language Option Flag */
+.translate-widget-lang-flag {
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Language Option Text */
+.translate-widget-lang-text {
+  flex: 1;
+}
+
+.translate-widget-lang-name {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: inherit;
+}
+
+.translate-widget-lang-native {
+  font-size: 0.75rem;
+  opacity: 0.6;
+  margin-top: 0.125rem;
+}
+
+/* Checkmark Icon */
+.translate-widget-checkmark {
+  color: #2563eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Loading State */
+.translate-widget-loading {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+}
+
+.translate-widget-spinner {
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 3px solid #dbeafe;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: spin 1.5s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Menu Footer */
+.translate-widget-menu-footer {
+  padding: 0.5rem 1rem;
+  background-color: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  font-size: 0.75rem;
+  color: #6b7280;
+  text-align: center;
+}
+
+/* Mobile Tooltip */
+.translate-widget-tooltip {
+  position: absolute;
+  bottom: calc(100% + 0.5rem);
+  left: 0;
+  background-color: #111827;
+  color: white;
+  font-size: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.25rem;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 40;
+}
+
+@media (min-width: 640px) {
+  .translate-widget-tooltip {
+    display: none;
+  }
+}
+
+/* ========== RESPONSIVE BEHAVIOR ========== */
+
+/* Small Screens */
+@media (max-width: 640px) {
+  .translate-widget-container {
+    bottom: 1rem;
+    left: 1rem;
+  }
+
+  .translate-widget-button {
+    padding: 0.625rem 0.75rem;
+    font-size: 0.8125rem;
+  }
+
+  .translate-widget-button span:not(.translate-widget-flag) {
+    display: none;
+  }
+
+  .translate-widget-menu {
+    width: 12rem;
+    bottom: calc(100% + 0.5rem);
+    left: -1rem;
+  }
+}
+
+/* Tablet & Up */
+@media (min-width: 640px) {
+  .translate-widget-button span:not(.translate-widget-flag) {
+    display: inline;
+  }
+}
+
+/* ========== ACCESSIBILITY ========== */
+
+/* Focus Styles */
+.translate-widget-button:focus-visible,
+.translate-widget-lang-option:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .translate-widget-button,
+  .translate-widget-lang-option,
+  .translate-widget-menu {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: more) {
+  .translate-widget-button {
+    border: 2px solid currentColor;
+  }
+
+  .translate-widget-lang-option {
+    border-bottom: 2px solid #e5e7eb;
+  }
+}
+
+/* ========== PRINT STYLES ========== */
+
+@media print {
+  .translate-widget-container {
+    display: none !important;
+  }
+}
+
+#goog-gt-tt,
+.skiptranslate {
+  display: none !important;
+}
+/* ========== PERMANENTLY HIDE GOOGLE TRANSLATE TOOLTIP ========== */
+
+/* Main tooltip container - blocks all hover interactions */
+#goog-gt-tt {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  width: 0 !important;
+  position: absolute !important;
+  top: -9999px !important;
+  left: -9999px !important;
+  pointer-events: none !important;
+  overflow: hidden !important;
+  z-index: -9999 !important;
+  opacity: 0 !important;
+  clip: rect(0, 0, 0, 0) !important;
+  clip-path: inset(50%) !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* All children of tooltip */
+#goog-gt-tt * {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Tooltip frame (iframe variant) */
+#goog-gt-tt iframe {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  width: 0 !important;
+}
+
+/* Prevent any visibility toggling via JavaScript */
+#goog-gt-tt[style*="visibility: visible"],
+#goog-gt-tt[style*="display: block"] {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Block all Google Translate overlays */
+.goog-te-balloon,
+.VIpgJd-ZVi9od-ORHb-HhXXyb {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  width: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Additional fallback: Google Translate tooltip text */
+.goog-tooltip {
+  display: none !important;
+  visibility: hidden !important;
+}
+/* ========== HIDE GOOGLE TRANSLATE BLUE TEXT HIGHLIGHT ========== */
+
+/* Block Google Translate selection/highlight overlay */
+.goog-te-span,
+.translated-text,
+[data-google-translate] {
+  background-color: transparent !important;
+  text-decoration: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Hide blue highlight on hover */
+::selection {
+  background-color: rgba(
+    59,
+    130,
+    246,
+    0.5
+  ) !important; /* Keep default selection blue */
+}
+
+/* Prevent Google's custom text selection styling */
+.goog-text-highlight {
+  background: transparent !important;
+  color: inherit !important;
+  text-decoration: none !important;
+}
+
+/* Block tooltip-triggered highlight */
+.goog-te-tooltip-text,
+.goog-te-tooltip {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Hide Google Translate balloon/popup on text hover */
+.goog-te-balloon-frame {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  width: 0 !important;
+  position: absolute !important;
+  top: -9999px !important;
+  left: -9999px !important;
+  pointer-events: none !important;
+  z-index: -9999 !important;
+}
+
+/* Block all Google Translate inline spans */
+span[style*="color: rgb"],
+span[style*="background-color"] {
+  background-color: transparent !important;
+  color: inherit !important;
+  text-decoration: none !important;
+}
+
+/* Disable hover effects on Google Translate elements */
+*:hover::after,
+*:hover::before {
+  content: none !important;
+}
+
+/* Nuclear option: Block ANY element with Google Translate classes */
+[class*="goog"],
+[class*="google-translate"],
+[class*="translated"] {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* Prevent highlight via MutationObserver injection */
+.skiptranslate {
+  display: none !important;
+}
+
+/* Block iframe-based highlights */
+iframe[title*="translate"],
+iframe[class*="translate"] {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  width: 0 !important;
+}
+
+/* Additional: Remove any "data-translation" attributes */
+[data-translation] {
+  background: transparent !important;
+}
