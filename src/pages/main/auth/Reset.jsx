@@ -113,7 +113,7 @@ export function ResetPasswordPage() {
           </p>
           <div className="space-y-3">
             <a
-              href="/auth/forgot"
+              href="/auth/forgot-password"
               className="block w-full py-3 px-6 bg-basic text-primary font-semibold rounded-sm hover:bg-opacity-90 transition-all"
             >
               Request New Reset Link
