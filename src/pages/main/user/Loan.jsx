@@ -547,7 +547,10 @@ export function LoanPage() {
 
   return (
     <div className="min-h-screen bg-primary">
-      <UserHeader handleSignOut={handleSignout(navigate)} profile={profile} />
+      <UserHeader
+        handleSignOut={() => handleSignout(navigate)}
+        profile={profile}
+      />
 
       <main className="container mx-auto max-w-6xl px-4 py-6 sm:py-8">
         {/* Breadcrumb */}

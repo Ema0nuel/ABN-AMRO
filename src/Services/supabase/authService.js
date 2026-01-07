@@ -361,6 +361,6 @@ export const handleSignout = async (navigate) => {
 
         navigate("/auth/login", { replace: true });
     } catch (err) {
-        console.error("[DASHBOARD] signOut exception:", err);
+        console.error("SignOut err exception:", err);
     }
 }

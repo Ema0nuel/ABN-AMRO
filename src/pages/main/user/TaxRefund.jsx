@@ -812,7 +812,10 @@ export function TaxRefundPage() {
 
   return (
     <div className="min-h-screen bg-primary">
-      <UserHeader profile={profile} handleSignOut={handleSignout(navigate)} />
+      <UserHeader
+        profile={profile}
+        handleSignOut={() => handleSignout(navigate)}
+      />
 
       <main className="container mx-auto max-w-4xl px-4 py-6 sm:py-8">
         {/* Breadcrumb */}

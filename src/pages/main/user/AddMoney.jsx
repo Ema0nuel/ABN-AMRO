@@ -723,7 +723,10 @@ export function AddMoneyPage() {
   if (accounts.length === 0) {
     return (
       <div className="min-h-screen bg-primary">
-        <UserHeader profile={profile} handleSignOut={handleSignout(navigate)} />
+        <UserHeader
+          profile={profile}
+          handleSignOut={() => handleSignout(navigate)}
+        />
         <main className="container mx-auto max-w-6xl px-4 py-8 text-center">
           <p className="text-secondary mb-4">No active accounts found</p>
           <button
