@@ -4,8 +4,8 @@ import LOGO from "../assets/images/Logo-abn.svg";
 const UserHeader = ({ profile, handleSignOut }) => {
   return (
     <>
-      {/* Header - Mobile Optimized */}
-      <header className="bg-secondary text-primary border-b border-basic shadow-sm sticky top-0 z-50">
+      {/* Header - Sticky on Desktop, Static on Mobile */}
+      <header className="bg-secondary text-primary border-b border-basic shadow-sm sm:sticky sm:top-0 z-50">
         <div className="container mx-auto max-w-6xl px-4 py-4 sm:py-6">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
             {/* Logo & Greeting - Mobile Centered, Desktop Left */}
