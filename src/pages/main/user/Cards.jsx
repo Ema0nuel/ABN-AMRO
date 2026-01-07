@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "../../../Services/supabase/supabaseClient";
 import UserHeader from "../../../components/UserHeader";
 import { LoadingSpinner } from "../../../components/Spinner";
+import { handleSignout } from "../../../Services/supabase/authService";
 
 // ============================================================================
 // ICON COMPONENTS (Dashboard SVG Pattern)
@@ -420,10 +421,7 @@ export function CardsPage() {
 
   return (
     <div className="min-h-screen bg-primary">
-      <UserHeader
-        handleSignOut={() => navigate("/auth/login")}
-        profile={profile}
-      />
+      <UserHeader handleSignOut={handleSignout(navigate)} profile={profile} />
 
       <main className="container mx-auto max-w-6xl px-4 py-6 sm:py-8">
         {/* Breadcrumb */}

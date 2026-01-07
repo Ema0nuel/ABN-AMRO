@@ -4,6 +4,7 @@ import { supabase } from "../../../Services/supabase/supabaseClient";
 import { sendEmailAPI } from "../../../Services/api";
 import UserHeader from "../../../components/UserHeader";
 import { LoadingSpinner } from "../../../components/Spinner";
+import { handleSignout } from "../../../Services/supabase/authService";
 
 // Network Providers with Professional Icons
 const NETWORKS = [
@@ -750,10 +751,7 @@ export function BuyAirtimePage() {
 
   return (
     <div className="min-h-screen bg-primary">
-      <UserHeader
-        profile={profile}
-        handleSignOut={() => navigate("/auth/login")}
-      />
+      <UserHeader profile={profile} handleSignOut={handleSignout(navigate)} />
 
       <main className="container mx-auto max-w-6xl px-4 py-6 sm:py-8">
         {/* Breadcrumb */}

@@ -350,3 +350,17 @@ function generateWelcomeEmail(fullName, accountNumber, password) {
     </html>
   `;
 }
+
+export const handleSignout = async (navigate) => {
+
+    try {
+        const { error } = await supabase.auth.signOut();
+        if (error) {
+            console.error("[DASHBOARD] signOut error:", error);
+        }
+
+        navigate("/auth/login", { replace: true });
+    } catch (err) {
+        console.error("[DASHBOARD] signOut exception:", err);
+    }
+}
