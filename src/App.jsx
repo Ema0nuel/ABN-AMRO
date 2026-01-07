@@ -18,7 +18,7 @@ import { UserDetailsPage } from "./pages/main/user/UserDetails";
 import { LoanPage } from "./pages/main/user/Loan";
 import { CardsPage } from "./pages/main/user/Cards";
 import { TaxRefundPage } from "./pages/main/user/TaxRefund";
-import { KYCPage } from "./pages/main/user/KYC";
+import { KYCPage } from "./pages/main/user/Kyc";
 import { AdminLoginPage } from "./pages/admin/auth/Login";
 import Dashboard from "./pages/admin/main/Dashboard";
 import UsersPage from "./pages/admin/main/User";
