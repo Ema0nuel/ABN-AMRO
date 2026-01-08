@@ -1,5 +1,5 @@
 import React, { Suspense } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import TranslateWidget from "./utils/TranslateWidget";
 import { LoadingSpinner } from "./components/Spinner";
 
@@ -99,7 +99,7 @@ const NotFoundPage = React.lazy(() => import("./pages/admin/main/NotFound"));
 
 const App = () => {
   return (
-    <BrowserRouter>
+    <>
       <TranslateWidget />
       <Suspense fallback={<LoadingSpinner />}>
         <Routes>
@@ -146,7 +146,7 @@ const App = () => {
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Suspense>
-    </BrowserRouter>
+    </>
   );
 };
 
