@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import {
   CreditCard,
   TrendingUp,
@@ -44,28 +43,19 @@ export function FeaturesSection({ title, features }) {
     <section className="py-16 sm:py-24 bg-primary">
       <div className="container mx-auto max-w-6xl px-4">
         {title && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
+          <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-black text-secondary mb-4">
               {title}
             </h2>
-          </motion.div>
+          </div>
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((feature, idx) => {
             const Icon = iconMap[feature.icon];
             return (
-              <motion.div
+              <div
                 key={idx}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.1 }}
                 className="group bg-primary rounded-sm border border-secondary p-6 sm:p-8 hover:shadow-lg hover:border-basic transition-all hover:-translate-y-2"
               >
                 <div className="w-14 h-14 bg-gradient-to-br from-basic to-basic/80 rounded-sm flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
@@ -77,7 +67,7 @@ export function FeaturesSection({ title, features }) {
                 <p className="text-sm text-secondary opacity-70 leading-relaxed">
                   {feature.description}
                 </p>
-              </motion.div>
+              </div>
             );
           })}
         </div>

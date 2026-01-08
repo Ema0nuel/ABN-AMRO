@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 
 export function CTASection({
@@ -17,25 +16,16 @@ export function CTASection({
           : "bg-gradient-to-r from-secondary/10 to-secondary/5"
       }`}
     >
-      <motion.div
-        className="absolute inset-0 opacity-10"
-        animate={{ rotate: 360 }}
-        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-        aria-hidden="true"
-      >
+      <div className="absolute inset-0 opacity-10">
         <div className="absolute top-0 right-0 w-96 h-96 bg-basic rounded-full blur-3xl" />
-      </motion.div>
+      </div>
 
       <div
         className={`relative z-10 container mx-auto max-w-4xl px-4 text-center ${
           isDark ? "text-primary" : "text-secondary"
         }`}
       >
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
-        >
+        <div>
           <h2
             className={`text-4xl sm:text-5xl font-black mb-6 ${
               isDark ? "text-primary" : "text-secondary"
@@ -67,7 +57,7 @@ export function CTASection({
               />
             </Link>
           )}
-        </motion.div>
+        </div>
       </div>
     </section>
   );

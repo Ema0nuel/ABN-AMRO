@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 
@@ -10,12 +9,8 @@ export function FAQSection({ faqs }) {
       <div className="container mx-auto max-w-3xl px-4">
         <div className="space-y-4">
           {faqs.map((faq, idx) => (
-            <motion.div
+            <div
               key={idx}
-              initial={{ opacity: 0, y: 10 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: idx * 0.05 }}
               className="bg-primary rounded-sm border border-secondary p-6 hover:border-basic transition-colors group cursor-pointer"
               onClick={() => setOpenIdx(openIdx === idx ? null : idx)}
             >
@@ -23,32 +18,20 @@ export function FAQSection({ faqs }) {
                 <h3 className="font-bold text-secondary group-hover:text-basic transition-colors">
                   {faq.q}
                 </h3>
-                <motion.div
-                  animate={{ rotate: openIdx === idx ? 180 : 0 }}
-                  transition={{ duration: 0.3 }}
-                >
+                <div>
                   <ChevronDown
                     size={20}
                     className="text-secondary flex-shrink-0"
                   />
-                </motion.div>
+                </div>
               </div>
 
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={
-                  openIdx === idx
-                    ? { opacity: 1, height: "auto" }
-                    : { opacity: 0, height: 0 }
-                }
-                transition={{ duration: 0.3 }}
-                className="overflow-hidden"
-              >
+              <div className="overflow-hidden">
                 <p className="text-secondary opacity-70 mt-3 text-sm leading-relaxed">
                   {faq.a}
                 </p>
-              </motion.div>
-            </motion.div>
+              </div>
+            </div>
           ))}
         </div>
       </div>

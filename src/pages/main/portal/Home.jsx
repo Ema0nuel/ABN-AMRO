@@ -1,7 +1,6 @@
 /* eslint-disable no-unused-vars */
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import {
   ArrowRight,
   CreditCard,
@@ -81,13 +80,7 @@ const Checkmark = () => (
 // ============================================================================
 
 const FeatureCard = ({ icon: Icon, title, description, index, image }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    transition={{ delay: index * 0.1 }}
-    viewport={{ once: true }}
-    className="group bg-primary rounded-sm border border-secondary p-6 sm:p-8 hover:shadow-lg hover:border-basic transition-all duration-300 hover:-translate-y-2 overflow-hidden"
-  >
+  <div className="group bg-primary rounded-sm border border-secondary p-6 sm:p-8 hover:shadow-lg hover:border-basic transition-all duration-300 hover:-translate-y-2 overflow-hidden">
     {/* Image Background */}
     {image && (
       <div className="mb-4 h-40 -mx-6 -mt-8 sm:-mx-8 sm:-mt-8 overflow-hidden rounded-b-sm">
@@ -110,34 +103,22 @@ const FeatureCard = ({ icon: Icon, title, description, index, image }) => (
     <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
       <ArrowRight size={16} className="text-basic inline" />
     </div>
-  </motion.div>
+  </div>
 );
 
 const StatCard = ({ number, label, delay }) => (
-  <motion.div
-    initial={{ opacity: 0, scale: 0.9 }}
-    whileInView={{ opacity: 1, scale: 1 }}
-    transition={{ delay }}
-    viewport={{ once: true }}
-    className="text-center"
-  >
+  <div className="text-center">
     <p className="text-4xl sm:text-5xl font-bold text-basic mb-2 font-mono">
       {number}
     </p>
     <p className="text-sm sm:text-base text-primary opacity-80 font-semibold">
       {label}
     </p>
-  </motion.div>
+  </div>
 );
 
 const TestimonialCard = ({ name, role, text, image, index }) => (
-  <motion.div
-    initial={{ opacity: 0, x: 30 }}
-    whileInView={{ opacity: 1, x: 0 }}
-    transition={{ delay: index * 0.1 }}
-    viewport={{ once: true }}
-    className="bg-primary rounded-sm border border-secondary p-6 sm:p-8 shadow-md hover:shadow-lg transition-shadow"
-  >
+  <div className="bg-primary rounded-sm border border-secondary p-6 sm:p-8 shadow-md hover:shadow-lg transition-shadow">
     {/* Stars */}
     <div className="flex gap-1 mb-4">
       {[...Array(5)].map((_, i) => (
@@ -169,15 +150,11 @@ const TestimonialCard = ({ name, role, text, image, index }) => (
         <p className="text-xs text-secondary opacity-60">{role}</p>
       </div>
     </div>
-  </motion.div>
+  </div>
 );
 
 const PricingTier = ({ name, price, features, highlighted, index }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    transition={{ delay: index * 0.1 }}
-    viewport={{ once: true }}
+  <div
     className={`rounded-sm border p-8 transition-all ${
       highlighted
         ? "bg-gradient-to-br from-basic to-basic/90 border-basic shadow-2xl scale-105 text-primary"
@@ -231,17 +208,11 @@ const PricingTier = ({ name, price, features, highlighted, index }) => (
         </div>
       ))}
     </div>
-  </motion.div>
+  </div>
 );
 
 const BlogCard = ({ title, excerpt, date, category, image, index }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    transition={{ delay: index * 0.1 }}
-    viewport={{ once: true }}
-    className="bg-primary rounded-sm border border-secondary overflow-hidden shadow-md hover:shadow-xl hover:border-basic transition-all group cursor-pointer"
-  >
+  <div className="bg-primary rounded-sm border border-secondary overflow-hidden shadow-md hover:shadow-xl hover:border-basic transition-all group cursor-pointer">
     {/* Image */}
     <div className="relative h-48 sm:h-56 overflow-hidden bg-gradient-to-br from-basic/20 to-basic/10">
       {image ? (
@@ -276,7 +247,7 @@ const BlogCard = ({ title, excerpt, date, category, image, index }) => (
         Read More <ArrowRight size={16} />
       </div>
     </div>
-  </motion.div>
+  </div>
 );
 
 // ============================================================================
@@ -331,14 +302,12 @@ export function HomePage() {
           />
 
           {/* Floating Shapes */}
-          <motion.div
+          <div
             className="absolute top-20 right-10 w-72 h-72 bg-primary/20 rounded-full blur-3xl"
-            animate={{ y: scrollY * 0.5 }}
             aria-hidden="true"
           />
-          <motion.div
+          <div
             className="absolute -bottom-32 -left-32 w-96 h-96 bg-primary/10 rounded-full blur-3xl"
-            animate={{ y: -scrollY * 0.3 }}
             aria-hidden="true"
           />
 
@@ -364,12 +333,7 @@ export function HomePage() {
                 </p>
 
                 {/* CTA Buttons */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5 }}
-                  className="flex flex-col sm:flex-row gap-4 pt-4"
-                >
+                <div className="flex flex-col sm:flex-row gap-4 pt-4">
                   <Link
                     to="/auth/signup"
                     className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-primary text-basic font-bold rounded-sm hover:shadow-lg hover:scale-105 transition-all active:scale-95 group"
@@ -386,15 +350,10 @@ export function HomePage() {
                   >
                     Sign In
                   </Link>
-                </motion.div>
+                </div>
 
                 {/* Trust Badges */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.6 }}
-                  className="flex items-center gap-6 pt-4 text-primary text-sm font-semibold"
-                >
+                <div className="flex items-center gap-6 pt-4 text-primary text-sm font-semibold">
                   <div className="flex items-center gap-2">
                     <CheckCircle size={18} className="text-primary" />
                     Secure & Encrypted
@@ -403,7 +362,7 @@ export function HomePage() {
                     <Shield size={18} className="text-primary" />
                     Regulated Bank
                   </div>
-                </motion.div>
+                </div>
               </div>
 
               {/* Right: Hero Image */}
@@ -420,16 +379,12 @@ export function HomePage() {
             </div>
 
             {/* Scroll Indicator - WITHOUT BOUNCE */}
-            <motion.div
-              animate={{ y: [0, 10, 0] }}
-              transition={{ duration: 3, repeat: Infinity }}
-              className="flex flex-col items-center gap-2 text-primary mx-auto"
-            >
+            <div className="flex flex-col items-center gap-2 text-primary mx-auto">
               <p className="text-sm font-semibold opacity-70">
                 Scroll to explore
               </p>
               <ArrowDownIcon />
-            </motion.div>
+            </div>
           </div>
         </section>
 
@@ -441,7 +396,7 @@ export function HomePage() {
           </div>
 
           <div className="relative z-10 container mx-auto max-w-6xl px-4">
-            <motion.div
+            <div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -453,7 +408,7 @@ export function HomePage() {
               <p className="text-lg text-primary/80 max-w-2xl mx-auto">
                 Join the growing community of satisfied customers worldwide
               </p>
-            </motion.div>
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
               <StatCard number="150+" label="Years of Trust" delay={0} />
@@ -471,7 +426,7 @@ export function HomePage() {
         {/* ===== SERVICES SECTION ===== */}
         <section className="py-16 sm:py-24 bg-primary">
           <div className="container mx-auto max-w-6xl px-4">
-            <motion.div
+            <div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -486,7 +441,7 @@ export function HomePage() {
               <p className="text-lg text-secondary opacity-70 max-w-2xl mx-auto">
                 Explore our full range of financial products and services
               </p>
-            </motion.div>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <FeatureCard
@@ -556,10 +511,8 @@ export function HomePage() {
             </div>
 
             {/* Tab Content */}
-            <motion.div
+            <div
               key={activeTab}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
               className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center"
             >
               {/* Left: Benefits List */}
@@ -579,14 +532,7 @@ export function HomePage() {
                     "Multi-currency accounts",
                     "Investment tools included",
                   ].map((benefit, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, x: -20 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.05 }}
-                      viewport={{ once: true }}
-                      className="flex items-center gap-3"
-                    >
+                    <div key={i} className="flex items-center gap-3">
                       <CheckCircle
                         size={20}
                         className="text-basic flex-shrink-0"
@@ -594,7 +540,7 @@ export function HomePage() {
                       <span className="text-secondary font-semibold">
                         {benefit}
                       </span>
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
 
@@ -604,11 +550,7 @@ export function HomePage() {
               </div>
 
               {/* Right: Image/Icon */}
-              <motion.div
-                animate={{ y: [-10, 10, -10] }}
-                transition={{ duration: 3, repeat: Infinity }}
-                className="relative h-96 bg-gradient-to-br from-basic/20 to-basic/5 rounded-sm border border-basic/30 overflow-hidden"
-              >
+              <div className="relative h-96 bg-gradient-to-br from-basic/20 to-basic/5 rounded-sm border border-basic/30 overflow-hidden">
                 {activeTab === "personal" && (
                   <img
                     src={PersonalBanking}
@@ -633,15 +575,15 @@ export function HomePage() {
                     loading="lazy"
                   />
                 )}
-              </motion.div>
-            </motion.div>
+              </div>
+            </div>
           </div>
         </section>
 
         {/* ===== TESTIMONIALS SECTION ===== */}
         <section className="py-16 sm:py-24 bg-primary">
           <div className="container mx-auto max-w-6xl px-4">
-            <motion.div
+            <div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -656,7 +598,7 @@ export function HomePage() {
               <p className="text-lg text-secondary opacity-70 max-w-2xl mx-auto">
                 Real feedback from our satisfied customers worldwide
               </p>
-            </motion.div>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <TestimonialCard
@@ -708,7 +650,7 @@ export function HomePage() {
         {/* ===== PRICING SECTION ===== */}
         <section className="py-16 sm:py-24 bg-secondary/5">
           <div className="container mx-auto max-w-6xl px-4">
-            <motion.div
+            <div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -720,7 +662,7 @@ export function HomePage() {
               <p className="text-lg text-secondary opacity-70 max-w-2xl mx-auto">
                 Choose the plan that fits your needs
               </p>
-            </motion.div>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <PricingTier
@@ -768,7 +710,7 @@ export function HomePage() {
         {/* ===== BLOG SECTION ===== */}
         <section className="py-16 sm:py-24 bg-primary">
           <div className="container mx-auto max-w-6xl px-4">
-            <motion.div
+            <div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -788,7 +730,7 @@ export function HomePage() {
               >
                 View All <ArrowRight size={20} />
               </Link>
-            </motion.div>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <BlogCard
@@ -822,7 +764,7 @@ export function HomePage() {
         {/* ===== FAQ SECTION ===== */}
         <section className="py-16 sm:py-24 bg-secondary/5">
           <div className="container mx-auto max-w-3xl px-4">
-            <motion.div
+            <div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -834,7 +776,7 @@ export function HomePage() {
               <p className="text-lg text-secondary opacity-70">
                 Find answers to common questions
               </p>
-            </motion.div>
+            </div>
 
             <div className="space-y-4">
               {[
@@ -855,12 +797,8 @@ export function HomePage() {
                   a: "Yes. Download our app from iOS or Android and access your account 24/7 with full functionality.",
                 },
               ].map((faq, i) => (
-                <motion.div
+                <div
                   key={i}
-                  initial={{ opacity: 0, y: 10 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  viewport={{ once: true }}
                   className="bg-primary rounded-sm border border-secondary p-6 hover:border-basic transition-colors group cursor-pointer"
                 >
                   <div className="flex items-center justify-between gap-4">
@@ -875,7 +813,7 @@ export function HomePage() {
                   <p className="text-secondary opacity-70 mt-3 text-sm leading-relaxed">
                     {faq.a}
                   </p>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
@@ -883,17 +821,12 @@ export function HomePage() {
 
         {/* ===== FINAL CTA SECTION ===== */}
         <section className="py-16 sm:py-24 bg-gradient-to-r from-basic to-basic/90 relative overflow-hidden">
-          <motion.div
-            className="absolute inset-0 opacity-10"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-            aria-hidden="true"
-          >
+          <div className="absolute inset-0 opacity-10" aria-hidden="true">
             <div className="absolute top-0 right-0 w-96 h-96 bg-primary rounded-full blur-3xl" />
-          </motion.div>
+          </div>
 
           <div className="relative z-10 container mx-auto max-w-4xl px-4 text-center">
-            <motion.div
+            <div
               initial={{ opacity: 0, scale: 0.95 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
@@ -921,7 +854,7 @@ export function HomePage() {
                   Banking Panel
                 </button>
               </div>
-            </motion.div>
+            </div>
           </div>
         </section>
 
