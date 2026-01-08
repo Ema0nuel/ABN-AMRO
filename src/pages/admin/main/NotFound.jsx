@@ -1,4 +1,3 @@
-import { Helmet } from "react-helmet";
 import { Link } from "react-router-dom";
 import { Home, ArrowLeft } from "lucide-react";
 import Navbar from "../../../components/Navbar";
@@ -7,15 +6,6 @@ import Footer from "../../../components/Footer";
 export default function NotFoundPage() {
   return (
     <>
-      <Helmet>
-        <title>404 - Page Not Found | ABN AMRO</title>
-        <meta
-          name="description"
-          content="The page you're looking for doesn't exist. Return to ABN AMRO homepage."
-        />
-        <meta name="robots" content="noindex, nofollow" />
-      </Helmet>
-
       <div className="min-h-screen bg-primary flex flex-col">
         <Navbar />
 

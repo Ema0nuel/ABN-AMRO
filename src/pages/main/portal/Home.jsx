@@ -1,5 +1,4 @@
 /* eslint-disable no-unused-vars */
-import { Helmet } from "react-helmet";
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
@@ -307,26 +306,6 @@ export function HomePage() {
 
   return (
     <>
-      <Helmet>
-        <title>ABN AMRO | Premium Banking & Financial Services | 2026</title>
-        <meta
-          name="description"
-          content="ABN AMRO Bank: Trusted financial services for individuals, businesses, and institutions. Secure banking, investment solutions, and personal wealth management."
-        />
-        <meta
-          name="keywords"
-          content="banking, financial services, investments, loans, accounts, ABN AMRO"
-        />
-        <meta name="author" content="ABN AMRO Bank NV" />
-        <meta property="og:type" content="website" />
-        <meta property="og:title" content="ABN AMRO - Banking Solutions" />
-        <meta
-          property="og:description"
-          content="Discover comprehensive banking and financial services from ABN AMRO."
-        />
-        <meta property="og:image" content={HeroImage} />
-      </Helmet>
-
       <div className="min-h-screen bg-primary flex flex-col">
         <Navbar />
 
@@ -367,41 +346,22 @@ export function HomePage() {
             {/* Main Hero Content */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center flex-1">
               {/* Left: Text Content */}
-              <motion.div
-                initial={{ opacity: 0, x: -50 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.8 }}
-                className="flex flex-col gap-6"
-              >
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.2 }}
-                >
+              <div className="flex flex-col gap-6">
+                <div>
                   <span className="inline-block px-4 py-2 bg-primary/30 text-primary rounded-xs text-sm font-bold mb-4 backdrop-blur-sm border border-primary/50">
                     ✨ Welcome to Banking Excellence
                   </span>
-                </motion.div>
+                </div>
 
-                <motion.h1
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="text-5xl sm:text-6xl lg:text-7xl font-black text-primary leading-tight"
-                >
+                <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-primary leading-tight">
                   Banking for Better,{" "}
                   <span className="text-primary italic">for Generations</span>
-                </motion.h1>
+                </h1>
 
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.4 }}
-                  className="text-lg sm:text-xl text-primary/90 opacity-95 max-w-md leading-relaxed"
-                >
+                <p className="text-lg sm:text-xl text-primary/90 opacity-95 max-w-md leading-relaxed">
                   Experience secure, innovative financial solutions tailored to
                   your needs. From personal banking to enterprise solutions.
-                </motion.p>
+                </p>
 
                 {/* CTA Buttons */}
                 <motion.div
@@ -444,7 +404,7 @@ export function HomePage() {
                     Regulated Bank
                   </div>
                 </motion.div>
-              </motion.div>
+              </div>
 
               {/* Right: Hero Image */}
               <div className="hidden lg:flex relative justify-center items-center">

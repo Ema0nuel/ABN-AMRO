@@ -1,4 +1,3 @@
-import { Helmet } from "react-helmet";
 import { useParams } from "react-router-dom";
 import { pagesData } from "../../../data/pagesData";
 import { SectionRenderer } from "../../../components/sections/SectionRenderer";
@@ -14,27 +13,8 @@ export function InnerPage() {
     return <NotFoundPage />;
   }
 
-  // Safe SEO extraction with fallbacks
-  const seoTitle =
-    page.seo?.title ||
-    `${slug.charAt(0).toUpperCase() + slug.slice(1)} | ABN AMRO`;
-  const seoDescription =
-    page.seo?.description || "Banking services from ABN AMRO.";
-
   return (
     <>
-      <Helmet>
-        <title>{seoTitle}</title>
-        <meta name="description" content={seoDescription} />
-        <meta
-          name="keywords"
-          content={`${slug}, banking, financial services`}
-        />
-        <meta property="og:title" content={seoTitle} />
-        <meta property="og:description" content={seoDescription} />
-        <canonical href={`${window.location.origin}/${slug}`} />
-      </Helmet>
-
       <div className="min-h-screen bg-primary flex flex-col">
         <Navbar />
 
