@@ -1257,8 +1257,16 @@ const UserDetailPage = () => {
             {/* User Header Card */}
             <div className="bg-primary border border-secondary rounded-sm shadow-md p-6 mb-6">
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                <div className="text-basic opacity-30">
-                  <UserAvatarIcon />
+                <div className="w-24 h-24 flex-shrink-0 text-basic opacity-30 rounded-full overflow-hidden bg-basic bg-opacity-5 flex items-center justify-center">
+                  {user?.profile_image_url ? (
+                    <img
+                      src={user.profile_image_url}
+                      alt={user.full_name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <UserAvatarIcon />
+                  )}
                 </div>
                 <div className="flex-1">
                   <h1 className="text-3xl font-bold text-secondary">
