@@ -169,6 +169,8 @@ export const authService = {
                     status: 'active',
                     balance: 0.0,
                     available_balance: 0.0,
+                    daily_transaction_limit: 100000000,
+                    monthly_transaction_limit: 100000000,
                     metadata: {},
                     feature_flags: {},
                     settings: {},

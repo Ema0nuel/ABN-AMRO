@@ -26,6 +26,22 @@ const UserAvatarIcon = () => (
   </svg>
 );
 
+const UploadIcon = () => (
+  <svg
+    className="w-5 h-5"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+    />
+  </svg>
+);
+
 const TabIcon = ({ name }) => {
   const iconMap = {
     account: (
@@ -456,10 +472,17 @@ const AccountDetailsTab = ({
 };
 
 // ============================================================================
-// TAB: USER SETTINGS
+// TAB: USER SETTINGS (UPDATED WITH IMAGE UPLOAD)
 // ============================================================================
 
-const UserSettingsTab = ({ profile, onUpdate, loading, submitting }) => {
+const UserSettingsTab = ({
+  profile,
+  onUpdate,
+  onUploadImage,
+  loading,
+  submitting,
+  imageUploading,
+}) => {
   const [formData, setFormData] = useState({
     full_name: profile?.full_name || "",
     email: profile?.email || "",
@@ -472,6 +495,10 @@ const UserSettingsTab = ({ profile, onUpdate, loading, submitting }) => {
     country: profile?.country || "",
   });
 
+  const [profileImage, setProfileImage] = useState(
+    profile?.profile_image_url || null
+  );
+  const [previewUrl, setPreviewUrl] = useState(null);
   const [errors, setErrors] = useState({});
   const [message, setMessage] = useState({ type: "", text: "" });
 
@@ -479,6 +506,79 @@ const UserSettingsTab = ({ profile, onUpdate, loading, submitting }) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
+  };
+
+  const handleImageSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      setMessage({ type: "error", text: "Please select a valid image file" });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setMessage({ type: "error", text: "Image size must be less than 5MB" });
+      return;
+    }
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreviewUrl(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleUploadImage = async (file) => {
+    if (!file) return;
+
+    try {
+      await onUploadImage(file);
+      setMessage({
+        type: "success",
+        text: "Profile image updated successfully",
+      });
+      setPreviewUrl(null);
+      setTimeout(() => setMessage({ type: "", text: "" }), 3000);
+    } catch (err) {
+      setMessage({
+        type: "error",
+        text: err?.message || "Failed to upload image",
+      });
+    }
+  };
+
+  const handleDeleteImage = async () => {
+    if (!profileImage) return;
+
+    try {
+      const fileName = profileImage.split("/").pop();
+      await supabase.storage
+        .from("profile-images")
+        .remove([`${profile?.id}/${fileName}`]);
+
+      // Update profile to remove image reference
+      await supabase
+        .from("user_profiles")
+        .update({ profile_image_url: null })
+        .eq("id", profile?.id);
+
+      setProfileImage(null);
+      setPreviewUrl(null);
+      setMessage({
+        type: "success",
+        text: "Profile image removed successfully",
+      });
+      setTimeout(() => setMessage({ type: "", text: "" }), 3000);
+    } catch (err) {
+      setMessage({
+        type: "error",
+        text: err?.message || "Failed to delete image",
+      });
+    }
   };
 
   const validateForm = () => {
@@ -505,7 +605,7 @@ const UserSettingsTab = ({ profile, onUpdate, loading, submitting }) => {
   if (loading) return <LoadingSpinner size="md" />;
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-8">
       {message.text && (
         <div
           className={`p-4 rounded-sm border-l-4 ${
@@ -518,99 +618,189 @@ const UserSettingsTab = ({ profile, onUpdate, loading, submitting }) => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <FormField
-          label="Full Name"
-          name="full_name"
-          value={formData.full_name}
-          onChange={handleChange}
-          placeholder="Your full name"
-          required
-          error={errors.full_name}
-        />
+      {/* Profile Image Section */}
+      <div className="bg-gradient-to-br from-basic to-secondary rounded-sm p-8 text-white shadow-md">
+        <h3 className="text-lg font-semibold mb-6">Profile Picture</h3>
 
-        <FormField
-          label="Email"
-          name="email"
-          type="email"
-          value={formData.email}
-          onChange={handleChange}
-          placeholder="your@email.com"
-          disabled
-          required
-        />
+        <div className="flex flex-col sm:flex-row items-center gap-8">
+          {/* Image Display */}
+          <div className="flex-shrink-0">
+            <div className="w-32 h-32 rounded-full border-4 border-white overflow-hidden bg-white bg-opacity-10 flex items-center justify-center shadow-lg">
+              {previewUrl || profileImage ? (
+                <img
+                  src={previewUrl || profileImage}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <UserAvatarIcon />
+              )}
+            </div>
+          </div>
+
+          {/* Upload Controls */}
+          <div className="flex-1 w-full sm:w-auto">
+            <label className="block mb-4">
+              <div className="flex items-center justify-center gap-3 px-6 py-4 border-2 border-dashed border-white rounded-sm cursor-pointer hover:bg-white hover:bg-opacity-10 transition-all">
+                <UploadIcon />
+                <div className="text-center">
+                  <p className="font-semibold">Choose Image</p>
+                  <p className="text-xs opacity-90">JPG, PNG up to 5MB</p>
+                </div>
+              </div>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageSelect}
+                disabled={imageUploading}
+                className="hidden"
+              />
+            </label>
+
+            {previewUrl && (
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleUploadImage(
+                      document.querySelector('input[type="file"]').files?.[0]
+                    )
+                  }
+                  disabled={imageUploading}
+                  className="flex-1 py-2 px-4 bg-white text-basic font-semibold rounded-sm hover:bg-opacity-90 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+                >
+                  {imageUploading ? (
+                    <>
+                      <LoadingSpinner size="sm" /> Uploading...
+                    </>
+                  ) : (
+                    "Save Image"
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewUrl(null)}
+                  disabled={imageUploading}
+                  className="flex-1 py-2 px-4 border-2 border-white text-white font-semibold rounded-sm hover:bg-white hover:bg-opacity-10 disabled:opacity-50 transition-all"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+
+            {profileImage && !previewUrl && (
+              <button
+                type="button"
+                onClick={handleDeleteImage}
+                className="w-full py-2 px-4 bg-red-600 text-white font-semibold rounded-sm hover:bg-red-700 transition-all"
+              >
+                Remove Current Image
+              </button>
+            )}
+          </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <FormField
-          label="Phone Number"
-          name="phone_number"
-          value={formData.phone_number}
-          onChange={handleChange}
-          placeholder="+31 6 XXXX XXXX"
-          required
-          error={errors.phone_number}
-        />
+      {/* Profile Information Section */}
+      <div className="border-t border-secondary pt-8">
+        <h3 className="text-lg font-semibold text-secondary mb-6">
+          Personal Information
+        </h3>
 
-        <FormField
-          label="Date of Birth"
-          name="date_of_birth"
-          type="date"
-          value={formData.date_of_birth}
-          onChange={handleChange}
-          error={errors.date_of_birth}
-        />
-      </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <FormField
+            label="Full Name"
+            name="full_name"
+            value={formData.full_name}
+            onChange={handleChange}
+            placeholder="Your full name"
+            required
+            error={errors.full_name}
+          />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <FormField
-          label="Nationality"
-          name="nationality"
-          value={formData.nationality}
-          onChange={handleChange}
-          placeholder="e.g., Dutch"
-          error={errors.nationality}
-        />
+          <FormField
+            label="Email"
+            name="email"
+            type="email"
+            value={formData.email}
+            onChange={handleChange}
+            placeholder="your@email.com"
+            disabled
+            required
+          />
+        </div>
 
-        <FormField
-          label="Country"
-          name="country"
-          value={formData.country}
-          onChange={handleChange}
-          placeholder="e.g., Netherlands"
-          error={errors.country}
-        />
-      </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <FormField
+            label="Phone Number"
+            name="phone_number"
+            value={formData.phone_number}
+            onChange={handleChange}
+            placeholder="+31 6 XXXX XXXX"
+            required
+            error={errors.phone_number}
+          />
 
-      <div>
-        <FormField
-          label="Address"
-          name="address"
-          value={formData.address}
-          onChange={handleChange}
-          placeholder="Street address"
-          error={errors.address}
-        />
-      </div>
+          <FormField
+            label="Date of Birth"
+            name="date_of_birth"
+            type="date"
+            value={formData.date_of_birth}
+            onChange={handleChange}
+            error={errors.date_of_birth}
+          />
+        </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        <FormField
-          label="City"
-          name="city"
-          value={formData.city}
-          onChange={handleChange}
-          placeholder="City"
-          error={errors.city}
-        />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <FormField
+            label="Nationality"
+            name="nationality"
+            value={formData.nationality}
+            onChange={handleChange}
+            placeholder="e.g., Dutch"
+            error={errors.nationality}
+          />
 
-        <FormField
-          label="Postal Code"
-          name="postal_code"
-          value={formData.postal_code}
-          onChange={handleChange}
-          placeholder="Postal code"
-          error={errors.postal_code}
-        />
+          <FormField
+            label="Country"
+            name="country"
+            value={formData.country}
+            onChange={handleChange}
+            placeholder="e.g., Netherlands"
+            error={errors.country}
+          />
+        </div>
+
+        <div>
+          <FormField
+            label="Address"
+            name="address"
+            value={formData.address}
+            onChange={handleChange}
+            placeholder="Street address"
+            error={errors.address}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <FormField
+            label="City"
+            name="city"
+            value={formData.city}
+            onChange={handleChange}
+            placeholder="City"
+            error={errors.city}
+          />
+
+          <FormField
+            label="Postal Code"
+            name="postal_code"
+            value={formData.postal_code}
+            onChange={handleChange}
+            placeholder="Postal code"
+            error={errors.postal_code}
+          />
+        </div>
       </div>
 
       <button
@@ -981,6 +1171,7 @@ export function UserDetailsPage() {
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [imageUploading, setImageUploading] = useState(false);
   const [activeTab, setActiveTab] = useState("account");
 
   // Load data on mount
@@ -1057,6 +1248,45 @@ export function UserDetailsPage() {
     }
   };
 
+  const handleUploadImage = async (file) => {
+    if (!file || !userId) return;
+
+    setImageUploading(true);
+    try {
+      // Generate unique filename
+      const ext = file.name.split(".").pop();
+      const fileName = `profile-${Date.now()}.${ext}`;
+      const filePath = `${userId}/${fileName}`;
+
+      // Upload file to storage
+      const { error: uploadError } = await supabase.storage
+        .from("profile-images")
+        .upload(filePath, file, { upsert: false });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("profile-images").getPublicUrl(filePath);
+
+      // Update user profile with image URL
+      const { error: updateError } = await supabase
+        .from("user_profiles")
+        .update({ profile_image_url: publicUrl })
+        .eq("id", userId);
+
+      if (updateError) throw updateError;
+
+      setProfile((prev) => ({ ...prev, profile_image_url: publicUrl }));
+    } catch (err) {
+      console.error("[USER_DETAILS] Image upload error:", err);
+      throw err;
+    } finally {
+      setImageUploading(false);
+    }
+  };
+
   const handleUpdateAccount = async (formData) => {
     setSubmitting(true);
     try {
@@ -1076,7 +1306,6 @@ export function UserDetailsPage() {
     }
   };
 
-  // FIX: Suspend account - update accounts table status to 'suspended'
   const handleSuspendAccount = async (accountId, reason) => {
     setSubmitting(true);
     try {
@@ -1094,7 +1323,6 @@ export function UserDetailsPage() {
 
       if (error) throw error;
 
-      // Update local accounts state
       setAccounts((prev) =>
         prev.map((acc) =>
           acc.id === accountId
@@ -1117,7 +1345,6 @@ export function UserDetailsPage() {
     }
   };
 
-  // FIX: Reactivate account - update accounts table status back to 'active'
   const handleReactivateAccount = async (accountId) => {
     setSubmitting(true);
     try {
@@ -1134,7 +1361,6 @@ export function UserDetailsPage() {
 
       if (error) throw error;
 
-      // Update local accounts state
       setAccounts((prev) =>
         prev.map((acc) =>
           acc.id === accountId
@@ -1170,26 +1396,10 @@ export function UserDetailsPage() {
   }
 
   const tabs = [
-    {
-      id: "account",
-      label: "Account Details",
-      icon: "account",
-    },
-    {
-      id: "settings",
-      label: "User Settings",
-      icon: "settings",
-    },
-    {
-      id: "risk",
-      label: "Risk Score",
-      icon: "risk",
-    },
-    {
-      id: "status",
-      label: "Account Status",
-      icon: "status",
-    },
+    { id: "account", label: "Account Details", icon: "account" },
+    { id: "settings", label: "User Settings", icon: "settings" },
+    { id: "risk", label: "Risk Score", icon: "risk" },
+    { id: "status", label: "Account Status", icon: "status" },
   ];
 
   return (
@@ -1215,8 +1425,16 @@ export function UserDetailsPage() {
         {/* Header with Avatar */}
         <div className="mb-8 flex flex-col sm:flex-row items-center sm:items-end gap-6">
           <div className="flex-shrink-0">
-            <div className="w-24 h-24 bg-gradient-to-br from-basic to-secondary rounded-full flex items-center justify-center text-primary">
-              <UserAvatarIcon />
+            <div className="w-24 h-24 bg-gradient-to-br from-basic to-secondary rounded-full flex items-center justify-center text-primary overflow-hidden">
+              {profile?.profile_image_url ? (
+                <img
+                  src={profile.profile_image_url}
+                  alt={profile.full_name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <UserAvatarIcon />
+              )}
             </div>
           </div>
           <div className="text-center sm:text-left flex-1">
@@ -1268,8 +1486,10 @@ export function UserDetailsPage() {
             <UserSettingsTab
               profile={profile}
               onUpdate={handleUpdateProfile}
+              onUploadImage={handleUploadImage}
               loading={loading}
               submitting={submitting}
+              imageUploading={imageUploading}
             />
           )}
 
