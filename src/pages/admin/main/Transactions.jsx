@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../../Services/supabase/supabaseClient";
@@ -42,9 +43,10 @@ const PlusIcon = () => (
   </svg>
 );
 
+// AFTER - w-5 h-5 (bigger)
 const EditIcon = () => (
   <svg
-    className="w-4 h-4"
+    className="w-5 h-5"
     fill="none"
     stroke="currentColor"
     viewBox="0 0 24 24"
@@ -150,8 +152,30 @@ const ClockIcon = () => (
   </svg>
 );
 
+const EyeIcon = () => (
+  <svg
+    className="w-4 h-4"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+    />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+    />
+  </svg>
+);
+
 // ============================================================================
-// UTILITY: Convert ISO string to local datetime string for input[type="datetime-local"]
+// UTILITY: ISO ↔ Local DateTime Conversion
 // ============================================================================
 
 const isoToLocalDatetime = (isoString) => {
@@ -168,6 +192,22 @@ const isoToLocalDatetime = (isoString) => {
 const localDatetimeToISO = (localDatetime) => {
   if (!localDatetime) return null;
   return new Date(localDatetime).toISOString();
+};
+
+// ============================================================================
+// HELPER: Identify Transaction Type Category
+// ============================================================================
+
+const isDebitTransaction = (type) => {
+  return ["withdrawal", "payment", "loan_repayment"].includes(type);
+};
+
+const isCreditTransaction = (type) => {
+  return ["deposit", "tax_refund"].includes(type);
+};
+
+const isLoanTransaction = (type) => {
+  return ["loan_disbursement", "loan_repayment"].includes(type);
 };
 
 // ============================================================================
@@ -346,7 +386,237 @@ const CollapsibleSection = ({ title, icon, isOpen, onToggle, children }) => (
 );
 
 // ============================================================================
-// TRANSACTION FORM MODAL (Create/Edit) – ENHANCED
+// TRANSACTION DETAIL MODAL (VIEW ONLY)
+// ============================================================================
+
+const TransactionDetailModal = ({
+  transaction,
+  accounts,
+  onClose,
+  onEditClick,
+}) => {
+  const fromAccount = accounts.find(
+    (a) => a.id === transaction?.from_account_id
+  );
+  const toAccount = accounts.find((a) => a.id === transaction?.to_account_id);
+
+  const isDebit = isDebitTransaction(transaction?.transaction_type);
+  const isCredit = isCreditTransaction(transaction?.transaction_type);
+  const isLoan = isLoanTransaction(transaction?.transaction_type);
+
+  const displayType = isCredit
+    ? "CREDIT (Balance +)"
+    : isDebit
+    ? "DEBIT (Balance -)"
+    : "TRANSFER";
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-primary rounded-sm border border-secondary shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-8">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-secondary">
+            📋 Transaction Details
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-secondary opacity-60 hover:opacity-100 transition-all"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <div className="space-y-6">
+          {/* Reference & Amount */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="bg-secondary bg-opacity-5 border border-secondary rounded-sm p-4">
+              <p className="text-xs text-secondary opacity-60 uppercase tracking-wider mb-1">
+                Reference
+              </p>
+              <p className="font-mono font-bold text-basic text-sm">
+                {transaction?.reference_number}
+              </p>
+            </div>
+            <div className="bg-secondary bg-opacity-5 border border-secondary rounded-sm p-4">
+              <p className="text-xs text-secondary opacity-60 uppercase tracking-wider mb-1">
+                Amount
+              </p>
+              <p className="font-bold text-lg text-basic">
+                {transaction?.currency} {transaction?.amount?.toFixed(2)}
+              </p>
+            </div>
+            <div className="bg-secondary bg-opacity-5 border border-secondary rounded-sm p-4">
+              <p className="text-xs text-secondary opacity-60 uppercase tracking-wider mb-1">
+                Status
+              </p>
+              <span
+                className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold ${
+                  transaction?.status === "completed"
+                    ? "bg-green-100 text-green-800"
+                    : transaction?.status === "pending"
+                    ? "bg-yellow-100 text-yellow-800"
+                    : transaction?.status === "failed"
+                    ? "bg-red-100 text-red-800"
+                    : "bg-gray-100 text-gray-800"
+                }`}
+              >
+                {transaction?.status === "completed" && <CheckIcon />}
+                {transaction?.status === "failed" && <XIcon />}
+                {transaction?.status?.charAt(0).toUpperCase() +
+                  transaction?.status?.slice(1)}
+              </span>
+            </div>
+          </div>
+
+          {/* Type & Accounts */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="bg-secondary bg-opacity-5 border border-secondary rounded-sm p-4">
+              <p className="text-xs text-secondary opacity-60 uppercase tracking-wider mb-2">
+                Type
+              </p>
+              <div>
+                <p className="font-semibold text-secondary capitalize text-sm">
+                  {transaction?.transaction_type.replace(/_/g, " ")}
+                </p>
+                <p className="text-xs text-secondary opacity-60 mt-1">
+                  {displayType}
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-secondary bg-opacity-5 border border-secondary rounded-sm p-4">
+              <p className="text-xs text-secondary opacity-60 uppercase tracking-wider mb-2">
+                From Account
+              </p>
+              <p className="font-semibold text-secondary">
+                {fromAccount?.account_number || "Unknown"}
+              </p>
+              <p className="text-xs text-secondary opacity-60 mt-1">
+                Balance: {fromAccount?.currency}{" "}
+                {fromAccount?.balance?.toFixed(2)}
+              </p>
+            </div>
+          </div>
+
+          {toAccount && (
+            <div className="bg-secondary bg-opacity-5 border border-secondary rounded-sm p-4">
+              <p className="text-xs text-secondary opacity-60 uppercase tracking-wider mb-2">
+                To Account
+              </p>
+              <p className="font-semibold text-secondary">
+                {toAccount.account_number}
+              </p>
+              <p className="text-xs text-secondary opacity-60 mt-1">
+                Balance: {toAccount.currency} {toAccount.balance?.toFixed(2)}
+              </p>
+            </div>
+          )}
+
+          {transaction?.external_recipient_iban && (
+            <div className="bg-secondary bg-opacity-5 border border-secondary rounded-sm p-4">
+              <p className="text-xs text-secondary opacity-60 uppercase tracking-wider mb-2">
+                External Recipient
+              </p>
+              <p className="font-semibold text-secondary">
+                {transaction?.external_recipient_name}
+              </p>
+              <p className="font-mono text-xs text-secondary mt-1">
+                {transaction?.external_recipient_iban}
+              </p>
+            </div>
+          )}
+
+          {/* Description */}
+          {transaction?.description && (
+            <div className="bg-secondary bg-opacity-5 border border-secondary rounded-sm p-4">
+              <p className="text-xs text-secondary opacity-60 uppercase tracking-wider mb-2">
+                Description
+              </p>
+              <p className="text-sm text-secondary">
+                {transaction?.description}
+              </p>
+            </div>
+          )}
+
+          {/* Timestamps */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="bg-secondary bg-opacity-5 border border-secondary rounded-sm p-4">
+              <p className="text-xs text-secondary opacity-60 uppercase tracking-wider mb-2">
+                Created
+              </p>
+              <p className="font-semibold text-secondary text-sm">
+                {new Date(transaction?.created_at).toLocaleString()}
+              </p>
+            </div>
+            <div className="bg-secondary bg-opacity-5 border border-secondary rounded-sm p-4">
+              <p className="text-xs text-secondary opacity-60 uppercase tracking-wider mb-2">
+                Approved
+              </p>
+              <p className="font-semibold text-secondary text-sm">
+                {transaction?.approved_at
+                  ? new Date(transaction.approved_at).toLocaleString()
+                  : "—"}
+              </p>
+            </div>
+            <div className="bg-secondary bg-opacity-5 border border-secondary rounded-sm p-4">
+              <p className="text-xs text-secondary opacity-60 uppercase tracking-wider mb-2">
+                Completed
+              </p>
+              <p className="font-semibold text-secondary text-sm">
+                {transaction?.completed_at
+                  ? new Date(transaction.completed_at).toLocaleString()
+                  : "—"}
+              </p>
+            </div>
+          </div>
+
+          {transaction?.failure_reason && (
+            <div className="bg-red-50 border border-red-200 rounded-sm p-4">
+              <p className="text-xs text-red-800 font-semibold uppercase tracking-wider mb-2">
+                Failure Reason
+              </p>
+              <p className="text-sm text-red-800">
+                {transaction?.failure_reason}
+              </p>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex gap-3 pt-6 border-t border-secondary">
+            <button
+              onClick={onClose}
+              className="flex-1 py-3 px-4 border border-secondary text-secondary font-semibold rounded-sm hover:bg-secondary hover:bg-opacity-5 transition-all"
+            >
+              Close
+            </button>
+            {
+              <button
+                onClick={onEditClick}
+                className="flex-1 py-3 px-4 bg-basic text-primary font-semibold rounded-sm hover:bg-opacity-90 transition-all flex items-center justify-center gap-2"
+              >
+                <EditIcon /> Edit Transaction
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ============================================================================
+// TRANSACTION FORM MODAL (Create/Edit)
 // ============================================================================
 
 const TransactionFormModal = ({
@@ -357,39 +627,35 @@ const TransactionFormModal = ({
   onSubmit,
   submitting,
 }) => {
-  // Initialize formData with all fields including timestamps
   const [formData, setFormData] = useState({
-    // Basic transaction info
     from_account_id: transaction?.from_account_id || "",
     to_account_id: transaction?.to_account_id || "",
     external_recipient_name: transaction?.external_recipient_name || "",
     external_recipient_iban: transaction?.external_recipient_iban || "",
     amount: transaction?.amount || "",
     currency: transaction?.currency || "USD",
-    transaction_type: transaction?.transaction_type || "transfer",
+    transaction_type: transaction?.transaction_type || "deposit",
     status: transaction?.status || "pending",
     description: transaction?.description || "",
     failure_reason: transaction?.failure_reason || "",
-
-    // Timestamp fields (convert ISO to local datetime format)
-    created_at: isoToLocalDatetime(transaction?.created_at),
-    approved_at: isoToLocalDatetime(transaction?.approved_at),
-    completed_at: isoToLocalDatetime(transaction?.completed_at),
+    created_at: transaction
+      ? isoToLocalDatetime(transaction.created_at)
+      : isoToLocalDatetime(new Date().toISOString()),
+    approved_at: transaction?.approved_at
+      ? isoToLocalDatetime(transaction.approved_at)
+      : "",
+    completed_at: transaction?.completed_at
+      ? isoToLocalDatetime(transaction.completed_at)
+      : "",
   });
 
   const [errors, setErrors] = useState({});
   const [expandedSections, setExpandedSections] = useState({
-    details: true,
+    basic: true,
     accounts: true,
-    timeline: false,
-    preview: false,
+    timestamps: false,
+    notes: false,
   });
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
-  };
 
   const toggleSection = (section) => {
     setExpandedSections((prev) => ({
@@ -398,19 +664,27 @@ const TransactionFormModal = ({
     }));
   };
 
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: name === "amount" ? (value ? parseFloat(value) : "") : value,
+    }));
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
+  };
+
   const validateForm = () => {
     const newErrors = {};
+    const amount = parseFloat(formData.amount);
 
     if (!formData.from_account_id)
-      newErrors.from_account_id = "From account is required";
-    if (!formData.amount || parseFloat(formData.amount) <= 0)
+      newErrors.from_account_id = "Source account required";
+    if (!amount || amount <= 0)
       newErrors.amount = "Amount must be greater than 0";
-    if (!formData.currency) newErrors.currency = "Currency is required";
+    if (!formData.currency) newErrors.currency = "Currency required";
     if (!formData.transaction_type)
-      newErrors.transaction_type = "Transaction type is required";
-
-    // Validate created_at is required
-    if (!formData.created_at) newErrors.created_at = "Created date is required";
+      newErrors.transaction_type = "Transaction type required";
+    if (!formData.created_at) newErrors.created_at = "Created date required";
 
     // Validate timestamp ordering
     if (formData.created_at && formData.approved_at) {
@@ -429,16 +703,48 @@ const TransactionFormModal = ({
       }
     }
 
-    if (formData.transaction_type === "transfer" && !formData.to_account_id) {
-      newErrors.to_account_id = "To account is required for transfers";
+    // Transfer validation
+    if (formData.transaction_type === "transfer") {
+      if (!formData.to_account_id)
+        newErrors.to_account_id = "Destination account required";
+      if (formData.from_account_id === formData.to_account_id) {
+        newErrors.to_account_id = "Cannot transfer to same account";
+      }
     }
 
-    if (
-      formData.transaction_type === "external_transfer" &&
-      !formData.external_recipient_iban
-    ) {
-      newErrors.external_recipient_iban =
-        "Recipient IBAN is required for external transfers";
+    // External transfer validation
+    if (formData.transaction_type === "external_transfer") {
+      if (!formData.external_recipient_iban)
+        newErrors.external_recipient_iban = "Recipient IBAN required";
+      if (!formData.external_recipient_name)
+        newErrors.external_recipient_name = "Recipient name required";
+    }
+
+    // Balance validation for debit transactions when completing
+    const isDebit = isDebitTransaction(formData.transaction_type);
+    const isLoan = isLoanTransaction(formData.transaction_type);
+
+    if (isDebit && !isLoan && formData.status === "completed") {
+      const fromAccount = accounts.find(
+        (a) => a.id === formData.from_account_id
+      );
+      if (fromAccount && fromAccount.balance < amount) {
+        newErrors.amount = `Insufficient balance. Available: ${
+          fromAccount.currency
+        } ${fromAccount.balance.toFixed(2)}, Required: ${
+          formData.currency
+        } ${amount.toFixed(2)}`;
+      }
+    }
+
+    // Currency mismatch for transfers
+    if (formData.transaction_type === "transfer" && formData.to_account_id) {
+      const fromAcc = accounts.find((a) => a.id === formData.from_account_id);
+      const toAcc = accounts.find((a) => a.id === formData.to_account_id);
+      if (fromAcc && toAcc && fromAcc.currency !== toAcc.currency) {
+        newErrors.currency =
+          "Source and destination accounts have different currencies";
+      }
     }
 
     return newErrors;
@@ -453,8 +759,16 @@ const TransactionFormModal = ({
     }
 
     onSubmit({
-      ...formData,
+      from_account_id: formData.from_account_id,
+      to_account_id: formData.to_account_id || null,
+      external_recipient_name: formData.external_recipient_name || null,
+      external_recipient_iban: formData.external_recipient_iban || null,
       amount: parseFloat(formData.amount),
+      currency: formData.currency,
+      transaction_type: formData.transaction_type,
+      status: formData.status,
+      description: formData.description || null,
+      failure_reason: formData.failure_reason || null,
       created_at: localDatetimeToISO(formData.created_at),
       approved_at: formData.approved_at
         ? localDatetimeToISO(formData.approved_at)
@@ -465,17 +779,16 @@ const TransactionFormModal = ({
     });
   };
 
-  // Get account details for preview
   const fromAccount = accounts.find((a) => a.id === formData.from_account_id);
   const toAccount = accounts.find((a) => a.id === formData.to_account_id);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-primary rounded-sm border border-secondary shadow-lg max-w-3xl w-full max-h-[95vh] overflow-y-auto p-6 sm:p-8">
-        <div className="flex items-center justify-between mb-8">
+      <div className="bg-primary rounded-sm border border-secondary shadow-lg max-w-4xl w-full max-h-[95vh] overflow-y-auto p-6 sm:p-8">
+        <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-secondary">
             {mode === "create"
-              ? "💳 Create New Transaction"
+              ? "➕ Create Transaction"
               : "✏️ Edit Transaction"}
           </h2>
           <button
@@ -500,104 +813,152 @@ const TransactionFormModal = ({
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* ================================================================ */}
-          {/* SECTION 1: TRANSACTION DETAILS */}
-          {/* ================================================================ */}
+          {/* Basic Information */}
           <CollapsibleSection
-            title="Transaction Details"
-            icon="📋"
-            isOpen={expandedSections.details}
-            onToggle={() => toggleSection("details")}
+            title="Basic Information"
+            icon="💳"
+            isOpen={expandedSections.basic}
+            onToggle={() => toggleSection("basic")}
           >
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <SelectField
-                  label="Transaction Type"
-                  name="transaction_type"
-                  value={formData.transaction_type}
-                  onChange={handleChange}
-                  options={[
-                    { value: "transfer", label: "Internal Transfer" },
-                    { value: "external_transfer", label: "External Transfer" },
-                    { value: "deposit", label: "Deposit" },
-                    { value: "withdrawal", label: "Withdrawal" },
-                    { value: "payment", label: "Payment" },
-                    { value: "tax_refund", label: "Tax Refund (Credit)" },
-                    {
-                      value: "loan_disbursement",
-                      label: "Loan Disbursement",
-                    },
-                    { value: "loan_repayment", label: "Loan Repayment" },
-                  ]}
-                  required
-                  error={errors.transaction_type}
-                />
-                <FormField
-                  label="Amount"
-                  name="amount"
-                  type="number"
-                  step="0.01"
-                  value={formData.amount}
-                  onChange={handleChange}
-                  placeholder="0.00"
-                  required
-                  error={errors.amount}
-                />
-                <SelectField
-                  label="Currency"
-                  name="currency"
-                  value={formData.currency}
-                  onChange={handleChange}
-                  options={[
-                    { value: "USD", label: "USD" },
-                    { value: "EUR", label: "EUR" },
-                    { value: "GBP", label: "GBP" },
-                    { value: "CAD", label: "CAD" },
-                    { value: "AUD", label: "AUD" },
-                    { value: "NGN", label: "NGN" },
-                  ]}
-                  required
-                  error={errors.currency}
-                />
-              </div>
-
-              <TextAreaField
-                label="Description"
-                name="description"
-                value={formData.description}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <SelectField
+                label="Transaction Type"
+                name="transaction_type"
+                value={formData.transaction_type}
                 onChange={handleChange}
-                placeholder="Enter transaction description (optional)"
+                options={[
+                  { value: "deposit", label: "Deposit (Credit)" },
+                  { value: "withdrawal", label: "Withdrawal (Debit)" },
+                  { value: "transfer", label: "Transfer (Debit)" },
+                  { value: "tax_refund", label: "Tax Refund (Credit)" },
+                  { value: "loan_disbursement", label: "Loan Disbursement" },
+                  { value: "loan_repayment", label: "Loan Repayment (Debit)" },
+                  {
+                    value: "external_transfer",
+                    label: "External Transfer (Debit)",
+                  },
+                  { value: "payment", label: "Payment (Debit)" },
+                ]}
+                required
+                error={errors.transaction_type}
+              />
+              <div className="mb-4">
+                <label className="block text-xs sm:text-sm font-semibold text-secondary mb-2 uppercase tracking-wider opacity-80">
+                  Amount <span className="text-red-600 ml-1">*</span>
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    name="amount"
+                    value={formData.amount}
+                    onChange={handleChange}
+                    placeholder="0.00"
+                    step="0.01"
+                    min="0"
+                    className={`flex-1 px-4 py-3 border rounded-sm focus:outline-none focus:ring-2 transition-all font-sans text-sm ${
+                      errors.amount
+                        ? "border-red-500 focus:ring-red-500 focus:ring-opacity-50"
+                        : "border-secondary focus:ring-basic focus:ring-opacity-30"
+                    }`}
+                  />
+                  <SelectField
+                    label="Currency"
+                    name="currency"
+                    value={formData.currency}
+                    onChange={handleChange}
+                    options={[
+                      { value: "USD", label: "USD" },
+                      { value: "EUR", label: "EUR" },
+                      { value: "GBP", label: "GBP" },
+                      { value: "CAD", label: "CAD" },
+                    ]}
+                    error={errors.currency}
+                  />
+                </div>
+                {errors.amount && (
+                  <p className="text-xs text-red-600 mt-1">{errors.amount}</p>
+                )}
+              </div>
+            </div>
+
+            <SelectField
+              label="Status"
+              name="status"
+              value={formData.status}
+              onChange={handleChange}
+              options={[
+                { value: "pending", label: "Pending (Awaiting Approval)" },
+                { value: "completed", label: "Completed (Approved)" },
+                { value: "failed", label: "Failed" },
+                { value: "on_hold", label: "On Hold" },
+                { value: "reversed", label: "Reversed" },
+              ]}
+              required
+              error={errors.status}
+            />
+
+            {formData.status === "failed" && (
+              <TextAreaField
+                label="Failure Reason"
+                name="failure_reason"
+                value={formData.failure_reason}
+                onChange={handleChange}
+                placeholder="Explain why this transaction failed..."
                 rows={2}
               />
-            </div>
+            )}
+
+            <TextAreaField
+              label="Description"
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              placeholder="Optional: Transaction notes or reference"
+              rows={2}
+            />
           </CollapsibleSection>
 
-          {/* ================================================================ */}
-          {/* SECTION 2: ACCOUNTS */}
-          {/* ================================================================ */}
+          {/* Account Selection */}
           <CollapsibleSection
-            title="Accounts"
+            title="Account Details"
             icon="🏦"
             isOpen={expandedSections.accounts}
             onToggle={() => toggleSection("accounts")}
           >
-            <div className="space-y-4">
-              <SelectField
-                label="From Account"
-                name="from_account_id"
-                value={formData.from_account_id}
-                onChange={handleChange}
-                options={accounts.map((acc) => ({
-                  value: acc.id,
-                  label: `${acc.account_number} (${acc.currency} ${acc.balance})`,
-                }))}
-                required
-                error={errors.from_account_id}
-              />
+            <SelectField
+              label="From Account (Source)"
+              name="from_account_id"
+              value={formData.from_account_id}
+              onChange={handleChange}
+              options={accounts.map((acc) => ({
+                value: acc.id,
+                label: `${acc.account_number} (${
+                  acc.currency
+                } ${acc.balance.toFixed(2)}) - ${acc.account_type}`,
+              }))}
+              required
+              error={errors.from_account_id}
+            />
 
-              {formData.transaction_type === "transfer" && (
+            {fromAccount && (
+              <div className="bg-secondary bg-opacity-5 border border-secondary rounded-sm p-4 mb-4">
+                <p className="text-xs text-secondary opacity-60 uppercase tracking-wider mb-2">
+                  Source Account Balance
+                </p>
+                <p className="text-lg font-bold text-basic">
+                  {fromAccount.currency} {fromAccount.balance.toFixed(2)}
+                </p>
+                <p className="text-xs text-secondary opacity-60 mt-1">
+                  Available: {fromAccount.currency}{" "}
+                  {fromAccount.available_balance.toFixed(2)}
+                </p>
+              </div>
+            )}
+
+            {formData.transaction_type === "transfer" && (
+              <>
                 <SelectField
-                  label="To Account"
+                  label="To Account (Destination)"
                   name="to_account_id"
                   value={formData.to_account_id}
                   onChange={handleChange}
@@ -605,203 +966,122 @@ const TransactionFormModal = ({
                     .filter((acc) => acc.id !== formData.from_account_id)
                     .map((acc) => ({
                       value: acc.id,
-                      label: `${acc.account_number} (${acc.currency})`,
+                      label: `${acc.account_number} (${
+                        acc.currency
+                      } ${acc.balance.toFixed(2)})`,
                     }))}
                   required
                   error={errors.to_account_id}
                 />
-              )}
 
-              {formData.transaction_type === "external_transfer" && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <FormField
-                    label="Recipient Name"
-                    name="external_recipient_name"
-                    value={formData.external_recipient_name}
-                    onChange={handleChange}
-                    placeholder="John Doe"
-                  />
-                  <FormField
-                    label="Recipient IBAN"
-                    name="external_recipient_iban"
-                    value={formData.external_recipient_iban}
-                    onChange={handleChange}
-                    placeholder="DE89370400440532013000"
-                    error={errors.external_recipient_iban}
-                  />
-                </div>
-              )}
-            </div>
-          </CollapsibleSection>
+                {toAccount && (
+                  <div className="bg-secondary bg-opacity-5 border border-secondary rounded-sm p-4">
+                    <p className="text-xs text-secondary opacity-60 uppercase tracking-wider mb-2">
+                      Destination Account Balance
+                    </p>
+                    <p className="text-lg font-bold text-basic">
+                      {toAccount.currency} {toAccount.balance.toFixed(2)}
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
 
-          {/* ================================================================ */}
-          {/* SECTION 3: STATUS & TIMELINE */}
-          {/* ================================================================ */}
-          <CollapsibleSection
-            title="Status & Timeline"
-            icon="⏱️"
-            isOpen={expandedSections.timeline}
-            onToggle={() => toggleSection("timeline")}
-          >
-            <div className="space-y-4">
-              <SelectField
-                label="Status"
-                name="status"
-                value={formData.status}
-                onChange={handleChange}
-                options={[
-                  { value: "pending", label: "Pending" },
-                  { value: "completed", label: "Completed" },
-                  { value: "failed", label: "Failed" },
-                  { value: "reversed", label: "Reversed" },
-                  { value: "on_hold", label: "On Hold" },
-                ]}
-              />
-
-              <DateTimeField
-                label="Created At"
-                name="created_at"
-                value={formData.created_at}
-                onChange={handleChange}
-                required
-                error={errors.created_at}
-                helper="When this transaction was initiated"
-              />
-
-              <DateTimeField
-                label="Approved At"
-                name="approved_at"
-                value={formData.approved_at}
-                onChange={handleChange}
-                error={errors.approved_at}
-                helper="When an admin approved this transaction (optional)"
-              />
-
-              <DateTimeField
-                label="Completed At"
-                name="completed_at"
-                value={formData.completed_at}
-                onChange={handleChange}
-                error={errors.completed_at}
-                helper="When this transaction was completed (optional)"
-              />
-
-              {formData.status === "failed" && (
-                <TextAreaField
-                  label="Failure Reason"
-                  name="failure_reason"
-                  value={formData.failure_reason}
+            {formData.transaction_type === "external_transfer" && (
+              <>
+                <FormField
+                  label="Recipient Name"
+                  name="external_recipient_name"
+                  value={formData.external_recipient_name}
                   onChange={handleChange}
-                  placeholder="Describe why this transaction failed..."
-                  rows={2}
-                  error={errors.failure_reason}
+                  placeholder="Full name of recipient"
+                  required
+                  error={errors.external_recipient_name}
                 />
-              )}
-            </div>
+                <FormField
+                  label="Recipient IBAN"
+                  name="external_recipient_iban"
+                  value={formData.external_recipient_iban}
+                  onChange={handleChange}
+                  placeholder="International Bank Account Number"
+                  required
+                  error={errors.external_recipient_iban}
+                />
+              </>
+            )}
           </CollapsibleSection>
 
-          {/* ================================================================ */}
-          {/* SECTION 4: PREVIEW */}
-          {/* ================================================================ */}
+          {/* Timestamps */}
           <CollapsibleSection
-            title="Transaction Preview"
-            icon="👁️"
-            isOpen={expandedSections.preview}
-            onToggle={() => toggleSection("preview")}
+            title="Transaction Timestamps"
+            icon="🕐"
+            isOpen={expandedSections.timestamps}
+            onToggle={() => toggleSection("timestamps")}
           >
-            <div className="space-y-3 text-sm">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-secondary bg-opacity-5 p-3 rounded-sm">
-                  <p className="text-xs text-secondary opacity-60 uppercase tracking-wider mb-1">
-                    Amount
-                  </p>
-                  <p className="font-bold text-lg text-basic">
-                    {formData.currency}{" "}
-                    {(parseFloat(formData.amount) || 0).toFixed(2)}
-                  </p>
-                </div>
+            <DateTimeField
+              label="Created Date & Time"
+              name="created_at"
+              value={formData.created_at}
+              onChange={handleChange}
+              required
+              helper="When the transaction was initiated"
+              error={errors.created_at}
+            />
 
-                <div className="bg-secondary bg-opacity-5 p-3 rounded-sm">
-                  <p className="text-xs text-secondary opacity-60 uppercase tracking-wider mb-1">
-                    Status
-                  </p>
-                  <p className="font-semibold text-secondary capitalize">
-                    {formData.status}
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-secondary bg-opacity-5 p-3 rounded-sm">
-                  <p className="text-xs text-secondary opacity-60 uppercase tracking-wider mb-1">
-                    Type
-                  </p>
-                  <p className="font-semibold text-secondary capitalize">
-                    {formData.transaction_type.replace("_", " ")}
-                  </p>
-                </div>
-
-                <div className="bg-secondary bg-opacity-5 p-3 rounded-sm">
-                  <p className="text-xs text-secondary opacity-60 uppercase tracking-wider mb-1">
-                    From Account
-                  </p>
-                  <p className="font-semibold text-secondary">
-                    {fromAccount?.account_number || "—"}
-                  </p>
-                </div>
-              </div>
-
-              {toAccount && (
-                <div className="bg-secondary bg-opacity-5 p-3 rounded-sm">
-                  <p className="text-xs text-secondary opacity-60 uppercase tracking-wider mb-1">
-                    To Account
-                  </p>
-                  <p className="font-semibold text-secondary">
-                    {toAccount.account_number}
-                  </p>
-                </div>
-              )}
-
-              {formData.created_at && (
-                <div className="bg-secondary bg-opacity-5 p-3 rounded-sm">
-                  <p className="text-xs text-secondary opacity-60 uppercase tracking-wider mb-1">
-                    Created
-                  </p>
-                  <p className="font-semibold text-secondary">
-                    {new Date(formData.created_at).toLocaleString()}
-                  </p>
-                </div>
-              )}
-            </div>
+            {formData.status === "completed" && (
+              <>
+                <DateTimeField
+                  label="Approved Date & Time"
+                  name="approved_at"
+                  value={formData.approved_at}
+                  onChange={handleChange}
+                  helper="When the transaction was approved by admin"
+                  error={errors.approved_at}
+                />
+                <DateTimeField
+                  label="Completed Date & Time"
+                  name="completed_at"
+                  value={formData.completed_at}
+                  onChange={handleChange}
+                  helper="When the transaction was finalized"
+                  error={errors.completed_at}
+                />
+              </>
+            )}
           </CollapsibleSection>
-
-          {/* ================================================================ */}
-          {/* FORM ACTIONS */}
-          {/* ================================================================ */}
-          <div className="flex gap-3 pt-6 border-t border-secondary">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={submitting}
-              className="flex-1 py-3 px-4 border border-secondary text-secondary font-semibold rounded-sm hover:bg-secondary hover:bg-opacity-5 transition-all disabled:opacity-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={submitting}
-              className="flex-1 py-3 px-4 bg-basic text-primary font-semibold rounded-sm hover:bg-opacity-90 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
-            >
-              {submitting ? (
-                <>
-                  <LoadingSpinner size="sm" /> Saving...
-                </>
-              ) : (
-                <>{mode === "create" ? "✅ Create" : "💾 Update"} Transaction</>
-              )}
-            </button>
-          </div>
         </form>
+
+        {/* Submit Buttons */}
+        <div className="flex gap-3 pt-6 border-t border-secondary mt-6">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={submitting}
+            className="flex-1 py-3 px-4 border border-secondary text-secondary font-semibold rounded-sm hover:bg-secondary hover:bg-opacity-5 transition-all disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            onClick={handleSubmit}
+            disabled={submitting}
+            className="flex-1 py-3 px-4 bg-basic text-primary font-semibold rounded-sm hover:bg-opacity-90 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+          >
+            {submitting ? (
+              <>
+                <LoadingSpinner size="sm" /> Saving...
+              </>
+            ) : mode === "create" ? (
+              <>
+                <PlusIcon /> Create Transaction
+              </>
+            ) : (
+              <>
+                <EditIcon /> Save Changes
+              </>
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -822,109 +1102,93 @@ const ApprovalModal = ({
   const fromAccount = accounts.find(
     (a) => a.id === transaction?.from_account_id
   );
-  const toAccount = accounts.find((a) => a.id === transaction?.to_account_id);
+  const isDebit = isDebitTransaction(transaction?.transaction_type);
+  const isLoan = isLoanTransaction(transaction?.transaction_type);
 
-  const isLoanTransaction = ["loan_disbursement", "loan_repayment"].includes(
-    transaction?.transaction_type
-  );
-  const isCreditTransaction = ["tax_refund", "deposit"].includes(
-    transaction?.transaction_type
-  );
-  const isDebitTransaction = [
-    "withdrawal",
-    "payment",
-    "loan_repayment",
-  ].includes(transaction?.transaction_type);
-
-  const displayType = isCreditTransaction
-    ? "CREDIT (Balance +)"
-    : isDebitTransaction
-    ? "DEBIT (Balance -)"
-    : "TRANSFER";
+  const willBeInsufficientFunds =
+    isDebit &&
+    !isLoan &&
+    fromAccount &&
+    fromAccount.balance < transaction?.amount;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-primary rounded-sm border border-secondary shadow-lg max-w-md w-full p-6">
-        <h3 className="text-xl font-bold text-secondary mb-4">
-          ✅ Approve Transaction?
-        </h3>
+      <div className="bg-primary rounded-sm border border-secondary shadow-lg max-w-md w-full p-6 sm:p-8">
+        <h2 className="text-2xl font-bold text-secondary mb-6">
+          🔍 Review Transaction
+        </h2>
 
-        <div className="space-y-4 mb-6">
-          <div className="bg-secondary bg-opacity-5 border border-secondary rounded-sm p-4">
-            <p className="text-xs text-secondary opacity-60 uppercase tracking-wider mb-1">
+        {/* Transaction Summary */}
+        <div className="bg-secondary bg-opacity-5 border border-secondary rounded-sm p-4 mb-4 space-y-3">
+          <div>
+            <p className="text-xs text-secondary opacity-60 uppercase tracking-wider">
               Reference
             </p>
-            <p className="font-mono font-semibold text-basic text-sm">
+            <p className="font-mono font-bold text-basic text-sm">
               {transaction?.reference_number}
             </p>
           </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-xs text-secondary opacity-60 uppercase tracking-wider mb-1">
-                Amount
-              </p>
-              <p className="font-semibold text-basic">
-                {transaction?.currency} {transaction?.amount?.toFixed(2)}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-secondary opacity-60 uppercase tracking-wider mb-1">
-                Type
-              </p>
-              <p className="font-semibold text-secondary capitalize text-sm">
-                {displayType}
-              </p>
-            </div>
-          </div>
-
           <div>
-            <p className="text-xs text-secondary opacity-60 uppercase tracking-wider mb-1">
-              From Account
+            <p className="text-xs text-secondary opacity-60 uppercase tracking-wider">
+              Amount
             </p>
-            <p className="font-semibold text-secondary">
-              {fromAccount?.account_number} ({fromAccount?.balance}{" "}
-              {fromAccount?.currency})
+            <p className="text-lg font-bold text-basic">
+              {transaction?.currency} {transaction?.amount?.toFixed(2)}
             </p>
           </div>
-
-          {toAccount && (
-            <div>
-              <p className="text-xs text-secondary opacity-60 uppercase tracking-wider mb-1">
-                To Account
-              </p>
-              <p className="font-semibold text-secondary">
-                {toAccount?.account_number} ({toAccount?.balance}{" "}
-                {toAccount?.currency})
-              </p>
-            </div>
-          )}
-
-          {isLoanTransaction && (
-            <div className="bg-blue-50 border border-blue-200 rounded-sm p-3">
-              <p className="text-xs text-blue-800 font-semibold">
-                ℹ️ Loan transactions are exempt from balance updates
-              </p>
-            </div>
-          )}
-
-          {isCreditTransaction && (
-            <div className="bg-green-50 border border-green-200 rounded-sm p-3">
-              <p className="text-xs text-green-800 font-semibold">
-                ✓ Account balance will be CREDITED (+{transaction?.amount})
-              </p>
-            </div>
-          )}
-
-          {isDebitTransaction && !isLoanTransaction && (
-            <div className="bg-orange-50 border border-orange-200 rounded-sm p-3">
-              <p className="text-xs text-orange-800 font-semibold">
-                ⚠️ Account balance will be DEBITED (-{transaction?.amount})
-              </p>
-            </div>
-          )}
+          <div>
+            <p className="text-xs text-secondary opacity-60 uppercase tracking-wider">
+              Type
+            </p>
+            <p className="capitalize text-secondary font-semibold">
+              {transaction?.transaction_type.replace(/_/g, " ")}
+            </p>
+          </div>
         </div>
 
+        {/* Source Account Info */}
+        {fromAccount && (
+          <div className="bg-secondary bg-opacity-5 border border-secondary rounded-sm p-4 mb-4">
+            <p className="text-xs text-secondary opacity-60 uppercase tracking-wider mb-2">
+              Source Account
+            </p>
+            <p className="font-semibold text-secondary">
+              {fromAccount.account_number}
+            </p>
+            <p className="text-xs text-secondary opacity-60 mt-1">
+              Current Balance: {fromAccount.currency}{" "}
+              {fromAccount.balance.toFixed(2)}
+            </p>
+          </div>
+        )}
+
+        {/* Insufficient Funds Warning */}
+        {willBeInsufficientFunds && (
+          <div className="bg-red-50 border border-red-200 rounded-sm p-4 mb-4">
+            <p className="text-sm font-semibold text-red-800 mb-2">
+              ⚠️ INSUFFICIENT FUNDS
+            </p>
+            <p className="text-xs text-red-800">
+              Account balance ({fromAccount?.currency}{" "}
+              {fromAccount?.balance.toFixed(2)}) is less than transaction amount
+              ({transaction?.currency} {transaction?.amount?.toFixed(2)})
+            </p>
+          </div>
+        )}
+
+        {/* Loan Approval Note */}
+        {isLoan && (
+          <div className="bg-blue-50 border border-blue-200 rounded-sm p-4 mb-4">
+            <p className="text-sm font-semibold text-blue-800">
+              💰 Loan Transaction
+            </p>
+            <p className="text-xs text-blue-800 mt-1">
+              Balance will not be affected. Loan records will be updated.
+            </p>
+          </div>
+        )}
+
+        {/* Action Buttons */}
         <div className="flex gap-3">
           <button
             onClick={onCancel}
@@ -934,9 +1198,9 @@ const ApprovalModal = ({
             Cancel
           </button>
           <button
-            onClick={() => onReject()}
-            disabled={submitting}
-            className="flex-1 py-2 px-4 bg-red-100 text-red-600 font-semibold rounded-sm hover:bg-red-200 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+            onClick={onReject}
+            disabled={submitting || willBeInsufficientFunds}
+            className="flex-1 py-2 px-4 bg-red-100 text-red-600 font-semibold rounded-sm hover:bg-red-200 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
           >
             {submitting ? (
               <>
@@ -949,9 +1213,9 @@ const ApprovalModal = ({
             )}
           </button>
           <button
-            onClick={() => onApprove()}
-            disabled={submitting}
-            className="flex-1 py-2 px-4 bg-green-600 text-white font-semibold rounded-sm hover:bg-green-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+            onClick={onApprove}
+            disabled={submitting || willBeInsufficientFunds}
+            className="flex-1 py-2 px-4 bg-green-100 text-green-600 font-semibold rounded-sm hover:bg-green-200 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
           >
             {submitting ? (
               <>
@@ -981,23 +1245,29 @@ const DeleteConfirmModal = ({
 }) => {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-primary rounded-sm border border-secondary shadow-lg max-w-md w-full p-6">
+      <div className="bg-primary rounded-sm border border-secondary shadow-lg max-w-md w-full p-6 sm:p-8">
         <h3 className="text-xl font-bold text-secondary mb-4">
           🗑️ Delete Transaction
         </h3>
         <p className="text-secondary opacity-70 mb-6">
-          Are you sure you want to permanently delete this transaction for{" "}
-          <span className="font-semibold">
-            {transaction?.currency} {transaction?.amount}
+          Are you sure you want to permanently delete transaction{" "}
+          <span className="font-mono font-semibold">
+            {transaction?.reference_number}
           </span>
-          ? This action cannot be undone.
+          ?
         </p>
 
-        <div className="bg-red-50 border border-red-200 rounded-sm p-4 mb-6">
-          <p className="text-sm text-red-800">
-            ⚠️ This will permanently remove the transaction from the database.
-          </p>
-        </div>
+        {transaction?.status === "completed" && (
+          <div className="bg-red-50 border border-red-200 rounded-sm p-4 mb-6">
+            <p className="text-sm font-semibold text-red-800 mb-2">
+              ⚠️ COMPLETED TRANSACTION
+            </p>
+            <p className="text-xs text-red-800">
+              This transaction is completed. Deleting it will REVERSE all
+              balance changes made by this transaction.
+            </p>
+          </div>
+        )}
 
         <div className="flex gap-3">
           <button
@@ -1029,95 +1299,377 @@ const DeleteConfirmModal = ({
 };
 
 // ============================================================================
-// MAIN TRANSACTIONS PAGE
+// MAIN TRANSACTIONS PAGE COMPONENT
 // ============================================================================
 
 const TransactionsPage = () => {
   const navigate = useNavigate();
 
-  // Auth & UI State
+  // State Management
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [adminEmail, setAdminEmail] = useState("");
-
-  // Data State
-  const [transactions, setTransactions] = useState([]);
-  const [accounts, setAccounts] = useState([]);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+
+  const [transactions, setTransactions] = useState([]);
+  const [accounts, setAccounts] = useState([]);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
 
-  // Modal State
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [editingTransaction, setEditingTransaction] = useState(null);
-  const [deletingTransaction, setDeletingTransaction] = useState(null);
-  const [approvingTransaction, setApprovingTransaction] = useState(null);
-
-  // Message State
   const [message, setMessage] = useState({ type: "", text: "" });
 
-  // ============================================================================
-  // AUTHENTICATION CHECK
-  // ============================================================================
+  // Modal States
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [viewingTransaction, setViewingTransaction] = useState(null);
+  const [editingTransaction, setEditingTransaction] = useState(null);
+  const [approvingTransaction, setApprovingTransaction] = useState(null);
+  const [deletingTransaction, setDeletingTransaction] = useState(null);
+
+  // ========================================================================
+  // AUTHENTICATION & INITIALIZATION
+  // ========================================================================
 
   useEffect(() => {
-    const authenticated = isAdminAuthenticated();
-    if (!authenticated) {
-      navigate("/user/admin/auth/login", { replace: true });
-      return;
-    }
-
-    setIsAuthenticated(true);
-    const email = sessionStorage.getItem("admin_email") || "admin@example.com";
-    setAdminEmail(email);
-  }, [navigate]);
-
-  // ============================================================================
-  // FETCH TRANSACTIONS & ACCOUNTS
-  // ============================================================================
-
-  useEffect(() => {
-    if (!isAuthenticated) return;
-
-    const fetchData = async () => {
+    const checkAuth = async () => {
       try {
-        setLoading(true);
-
-        const { data: txnData, error: txnError } = await supabase
-          .from("transactions")
-          .select("*")
-          .order("created_at", { ascending: false });
-
-        if (txnError) throw txnError;
-
-        const { data: accData, error: accError } = await supabase
-          .from("accounts")
-          .select("*")
-          .eq("is_deleted", false)
-          .order("created_at", { ascending: false });
-
-        if (accError) throw accError;
-
-        setTransactions(txnData || []);
-        setAccounts(accData || []);
+        const isAuth = await isAdminAuthenticated();
+        if (!isAuth) {
+          navigate("/user/admin/auth/login");
+          return;
+        }
+        setIsAuthenticated(true);
+        const { data: userData } = await supabase.auth.getUser();
+        setAdminEmail(userData?.user?.email || "Admin");
+        await fetchTransactions();
+        await fetchAccounts();
       } catch (err) {
-        console.error("[ADMIN_TRANSACTIONS] Fetch error:", err.message);
-        setMessage({
-          type: "error",
-          text: `Failed to load transactions: ${err.message}`,
-        });
+        console.error("[AUTH_ERROR]", err);
+        navigate("/admin/login");
       } finally {
         setLoading(false);
       }
     };
+    checkAuth();
+  }, [navigate]);
 
-    fetchData();
-  }, [isAuthenticated]);
+  // ========================================================================
+  // FETCH DATA
+  // ========================================================================
 
-  // ============================================================================
-  // CREATE TRANSACTION
-  // ============================================================================
+  const fetchTransactions = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("transactions")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setTransactions(data || []);
+    } catch (err) {
+      console.error("[FETCH_TRANSACTIONS]", err);
+      setMessage({ type: "error", text: "Failed to load transactions" });
+    }
+  };
+
+  const fetchAccounts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("accounts")
+        .select("*")
+        .eq("is_deleted", false);
+
+      if (error) throw error;
+      setAccounts(data || []);
+    } catch (err) {
+      console.error("[FETCH_ACCOUNTS]", err);
+      setMessage({ type: "error", text: "Failed to load accounts" });
+    }
+  };
+
+  // ========================================================================
+  // APPLY BALANCE CHANGES - ENHANCED FOR ALL TRANSACTION TYPES
+  // ========================================================================
+
+  const applyBalanceChanges = async (formData) => {
+    try {
+      const isDebit = isDebitTransaction(formData.transaction_type);
+      const isCredit = isCreditTransaction(formData.transaction_type);
+      const isLoan = isLoanTransaction(formData.transaction_type);
+
+      if (isLoan) return; // Skip balance updates for loans
+
+      // Fetch fresh account data to prevent race conditions
+      const { data: freshAccounts, error: fetchErr } = await supabase
+        .from("accounts")
+        .select("*")
+        .eq("is_deleted", false);
+
+      if (fetchErr) throw fetchErr;
+
+      const freshFromAccount = freshAccounts.find(
+        (a) => a.id === formData.from_account_id
+      );
+
+      if (!freshFromAccount) {
+        throw new Error("Source account not found");
+      }
+
+      // TRANSFER: Debit from source, credit to destination
+      if (formData.transaction_type === "transfer") {
+        const freshToAccount = freshAccounts.find(
+          (a) => a.id === formData.to_account_id
+        );
+
+        if (!freshToAccount) {
+          throw new Error("Destination account not found");
+        }
+
+        // Validate sufficient balance
+        if (freshFromAccount.balance < formData.amount) {
+          throw new Error(
+            `Insufficient balance in source account. Available: ${
+              freshFromAccount.currency
+            } ${freshFromAccount.balance.toFixed(2)}, Required: ${
+              formData.currency
+            } ${formData.amount.toFixed(2)}`
+          );
+        }
+
+        // Update from account (debit)
+        const { error: fromErr } = await supabase
+          .from("accounts")
+          .update({
+            balance: freshFromAccount.balance - formData.amount,
+            available_balance:
+              freshFromAccount.available_balance - formData.amount,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", formData.from_account_id);
+
+        if (fromErr) throw fromErr;
+
+        // Update to account (credit)
+        const { error: toErr } = await supabase
+          .from("accounts")
+          .update({
+            balance: freshToAccount.balance + formData.amount,
+            available_balance:
+              freshToAccount.available_balance + formData.amount,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", formData.to_account_id);
+
+        if (toErr) throw toErr;
+
+        // Update local state
+        setAccounts((prev) =>
+          prev.map((acc) => {
+            if (acc.id === formData.from_account_id) {
+              return {
+                ...acc,
+                balance: freshFromAccount.balance - formData.amount,
+                available_balance:
+                  freshFromAccount.available_balance - formData.amount,
+                updated_at: new Date().toISOString(),
+              };
+            } else if (acc.id === formData.to_account_id) {
+              return {
+                ...acc,
+                balance: freshToAccount.balance + formData.amount,
+                available_balance:
+                  freshToAccount.available_balance + formData.amount,
+                updated_at: new Date().toISOString(),
+              };
+            }
+            return acc;
+          })
+        );
+      }
+      // DEBIT (Withdrawal, Payment, External Transfer): Subtract from balance
+      else if (isDebit) {
+        if (freshFromAccount.balance < formData.amount) {
+          throw new Error(
+            `Insufficient balance. Available: ${
+              freshFromAccount.currency
+            } ${freshFromAccount.balance.toFixed(2)}, Required: ${
+              formData.currency
+            } ${formData.amount.toFixed(2)}`
+          );
+        }
+
+        const { error } = await supabase
+          .from("accounts")
+          .update({
+            balance: freshFromAccount.balance - formData.amount,
+            available_balance:
+              freshFromAccount.available_balance - formData.amount,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", formData.from_account_id);
+
+        if (error) throw error;
+
+        setAccounts((prev) =>
+          prev.map((acc) =>
+            acc.id === formData.from_account_id
+              ? {
+                  ...acc,
+                  balance: freshFromAccount.balance - formData.amount,
+                  available_balance:
+                    freshFromAccount.available_balance - formData.amount,
+                  updated_at: new Date().toISOString(),
+                }
+              : acc
+          )
+        );
+      }
+      // CREDIT (Deposit, Tax Refund): Add to balance
+      else if (isCredit) {
+        const { error } = await supabase
+          .from("accounts")
+          .update({
+            balance: freshFromAccount.balance + formData.amount,
+            available_balance:
+              freshFromAccount.available_balance + formData.amount,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", formData.from_account_id);
+
+        if (error) throw error;
+
+        setAccounts((prev) =>
+          prev.map((acc) =>
+            acc.id === formData.from_account_id
+              ? {
+                  ...acc,
+                  balance: freshFromAccount.balance + formData.amount,
+                  available_balance:
+                    freshFromAccount.available_balance + formData.amount,
+                  updated_at: new Date().toISOString(),
+                }
+              : acc
+          )
+        );
+      }
+    } catch (err) {
+      console.error("[BALANCE_UPDATE] Error:", err.message);
+      throw err;
+    }
+  };
+
+  // ========================================================================
+  // REVERSE BALANCE CHANGES UTILITY - ENHANCED
+  // ========================================================================
+
+  const reverseBalanceChanges = async (transaction) => {
+    try {
+      const isDebit = isDebitTransaction(transaction.transaction_type);
+      const isCredit = isCreditTransaction(transaction.transaction_type);
+      const isLoan = isLoanTransaction(transaction.transaction_type);
+
+      if (isLoan) return; // Loan transactions don't affect balances
+
+      const { data: freshAccounts, error: fetchErr } = await supabase
+        .from("accounts")
+        .select("*")
+        .eq("is_deleted", false);
+
+      if (fetchErr) throw fetchErr;
+
+      if (transaction.transaction_type === "transfer") {
+        // TRANSFER: Reverse by crediting source and debiting destination
+        const freshFromAccount = freshAccounts.find(
+          (a) => a.id === transaction.from_account_id
+        );
+        const freshToAccount = freshAccounts.find(
+          (a) => a.id === transaction.to_account_id
+        );
+
+        if (freshFromAccount) {
+          const { error } = await supabase
+            .from("accounts")
+            .update({
+              balance: freshFromAccount.balance + transaction.amount,
+              available_balance:
+                freshFromAccount.available_balance + transaction.amount,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", transaction.from_account_id);
+
+          if (error) throw error;
+        }
+
+        if (freshToAccount) {
+          const { error } = await supabase
+            .from("accounts")
+            .update({
+              balance: freshToAccount.balance - transaction.amount,
+              available_balance:
+                freshToAccount.available_balance - transaction.amount,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", transaction.to_account_id);
+
+          if (error) throw error;
+        }
+      } else if (isDebit) {
+        // DEBIT: Reverse by adding back to balance
+        const freshFromAccount = freshAccounts.find(
+          (a) => a.id === transaction.from_account_id
+        );
+
+        if (freshFromAccount) {
+          const { error } = await supabase
+            .from("accounts")
+            .update({
+              balance: freshFromAccount.balance + transaction.amount,
+              available_balance:
+                freshFromAccount.available_balance + transaction.amount,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", transaction.from_account_id);
+
+          if (error) throw error;
+        }
+      } else if (isCredit) {
+        // CREDIT: Reverse by subtracting from balance
+        const freshFromAccount = freshAccounts.find(
+          (a) => a.id === transaction.from_account_id
+        );
+
+        if (freshFromAccount) {
+          const { error } = await supabase
+            .from("accounts")
+            .update({
+              balance: freshFromAccount.balance - transaction.amount,
+              available_balance:
+                freshFromAccount.available_balance - transaction.amount,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", transaction.from_account_id);
+
+          if (error) throw error;
+        }
+      }
+
+      // Refresh accounts in state
+      const { data: updatedAccounts } = await supabase
+        .from("accounts")
+        .select("*")
+        .eq("is_deleted", false);
+
+      setAccounts(updatedAccounts || []);
+    } catch (err) {
+      console.error("[BALANCE_REVERSE] Error:", err.message);
+      throw err;
+    }
+  };
+
+  // ========================================================================
+  // CREATE TRANSACTION WITH VALIDATION
+  // ========================================================================
 
   const handleCreateTransaction = async (formData) => {
     setSubmitting(true);
@@ -1127,39 +1679,75 @@ const TransactionsPage = () => {
         .substr(2, 9)
         .toUpperCase()}`;
 
-      const { data, error } = await supabase.from("transactions").insert({
-        from_account_id: formData.from_account_id,
-        to_account_id: formData.to_account_id || null,
-        external_recipient_name: formData.external_recipient_name || null,
-        external_recipient_iban: formData.external_recipient_iban || null,
-        amount: formData.amount,
-        currency: formData.currency,
-        transaction_type: formData.transaction_type,
-        status: formData.status,
-        description: formData.description || null,
-        reference_number: referenceNumber,
-        failure_reason: formData.failure_reason || null,
-        created_at: formData.created_at,
-        approved_at: formData.approved_at,
-        completed_at: formData.completed_at,
-        metadata: {
-          created_by: "admin",
-          initiated_at: new Date().toISOString(),
+      // Validate balance before creating completed transaction
+      if (formData.status === "completed") {
+        const isDebit = isDebitTransaction(formData.transaction_type);
+        const isLoan = isLoanTransaction(formData.transaction_type);
+
+        if (!isLoan && isDebit) {
+          const fromAcc = accounts.find(
+            (a) => a.id === formData.from_account_id
+          );
+          if (fromAcc && fromAcc.balance < formData.amount) {
+            throw new Error(
+              `Insufficient balance. Available: ${
+                fromAcc.currency
+              } ${fromAcc.balance.toFixed(2)}, Required: ${
+                formData.currency
+              } ${formData.amount.toFixed(2)}`
+            );
+          }
+        }
+      }
+
+      const { data, error } = await supabase.from("transactions").insert([
+        {
+          from_account_id: formData.from_account_id,
+          to_account_id: formData.to_account_id || null,
+          external_recipient_name: formData.external_recipient_name || null,
+          external_recipient_iban: formData.external_recipient_iban || null,
+          amount: formData.amount,
+          currency: formData.currency,
+          transaction_type: formData.transaction_type,
+          status: formData.status,
+          description: formData.description || null,
+          reference_number: referenceNumber,
+          failure_reason: formData.failure_reason || null,
+          created_at: formData.created_at,
+          approved_at: formData.approved_at || null,
+          completed_at: formData.completed_at || null,
+          metadata: {
+            created_by: "admin",
+            initiated_at: new Date().toISOString(),
+          },
         },
-      });
+      ]);
 
       if (error) throw error;
+
+      // If completed, update balances immediately
+      if (formData.status === "completed") {
+        try {
+          await applyBalanceChanges(formData);
+        } catch (balanceErr) {
+          // Delete transaction if balance update fails
+          await supabase.from("transactions").delete().eq("id", data[0].id);
+          throw new Error(`Balance update failed: ${balanceErr.message}`);
+        }
+      }
 
       setTransactions((prev) => [data[0], ...prev]);
 
       setMessage({
         type: "success",
-        text: `✅ Transaction created! Ref: ${referenceNumber}`,
+        text: `✅ Transaction created! Ref: ${referenceNumber}${
+          formData.status === "completed" ? " (Balance updated)" : ""
+        }`,
       });
       setShowCreateModal(false);
       setTimeout(() => setMessage({ type: "", text: "" }), 4000);
     } catch (err) {
-      console.error("[ADMIN_TRANSACTIONS] Create error:", err.message);
+      console.error("[CREATE_TRANSACTION]", err.message);
       setMessage({
         type: "error",
         text: `Failed to create transaction: ${err.message}`,
@@ -1169,14 +1757,19 @@ const TransactionsPage = () => {
     }
   };
 
-  // ============================================================================
-  // UPDATE TRANSACTION
-  // ============================================================================
+  // ========================================================================
+  // UPDATE TRANSACTION WITH SMART BALANCE RECALCULATION
+  // ========================================================================
 
   const handleUpdateTransaction = async (formData) => {
     setSubmitting(true);
     try {
-      const { error } = await supabase
+      const oldTransaction = editingTransaction;
+      const oldStatus = oldTransaction.status;
+      const newStatus = formData.status;
+
+      // Update transaction in database
+      const { error: updateError } = await supabase
         .from("transactions")
         .update({
           from_account_id: formData.from_account_id,
@@ -1196,8 +1789,36 @@ const TransactionsPage = () => {
         })
         .eq("id", editingTransaction.id);
 
-      if (error) throw error;
+      if (updateError) throw updateError;
 
+      // BALANCE LOGIC:
+      // 1. If old transaction was completed, reverse its balance changes
+      // 2. If new transaction is completed, apply new balance changes
+
+      if (oldStatus === "completed") {
+        // Reverse old transaction's balance changes
+        await reverseBalanceChanges(oldTransaction);
+      }
+
+      if (newStatus === "completed") {
+        // Apply new transaction's balance changes with validation
+        try {
+          await applyBalanceChanges(formData);
+        } catch (balanceErr) {
+          // Revert transaction update if balance fails
+          await supabase
+            .from("transactions")
+            .update({
+              status: oldStatus,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", editingTransaction.id);
+
+          throw new Error(`Balance validation failed: ${balanceErr.message}`);
+        }
+      }
+
+      // Update local state
       setTransactions((prev) =>
         prev.map((t) =>
           t.id === editingTransaction.id
@@ -1215,9 +1836,10 @@ const TransactionsPage = () => {
         text: "✅ Transaction updated successfully",
       });
       setEditingTransaction(null);
+      setViewingTransaction(null);
       setTimeout(() => setMessage({ type: "", text: "" }), 3000);
     } catch (err) {
-      console.error("[ADMIN_TRANSACTIONS] Update error:", err.message);
+      console.error("[UPDATE_TRANSACTION]", err.message);
       setMessage({
         type: "error",
         text: `Failed to update transaction: ${err.message}`,
@@ -1227,66 +1849,71 @@ const TransactionsPage = () => {
     }
   };
 
-  // ============================================================================
-  // APPROVE TRANSACTION
-  // ============================================================================
+  // ========================================================================
+  // APPROVE TRANSACTION WITH BALANCE UPDATES & TIMESTAMP
+  // ========================================================================
 
   const handleApproveTransaction = async () => {
     setSubmitting(true);
     try {
       const txn = approvingTransaction;
-      const isLoanTransaction = [
-        "loan_disbursement",
-        "loan_repayment",
-      ].includes(txn.transaction_type);
-      const isCreditTransaction = ["tax_refund", "deposit"].includes(
-        txn.transaction_type
-      );
+      const isLoan = isLoanTransaction(txn.transaction_type);
+      const isDebit = isDebitTransaction(txn.transaction_type);
 
+      // Validate balance before approval
+      if (!isLoan && isDebit) {
+        const { data: freshAccounts } = await supabase
+          .from("accounts")
+          .select("*")
+          .eq("is_deleted", false);
+
+        const fromAcc = freshAccounts.find((a) => a.id === txn.from_account_id);
+        if (fromAcc && fromAcc.balance < txn.amount) {
+          throw new Error(
+            `Insufficient funds. Available: ${
+              fromAcc.currency
+            } ${fromAcc.balance.toFixed(2)}, Required: ${
+              txn.currency
+            } ${txn.amount.toFixed(2)}`
+          );
+        }
+      }
+
+      const approvalTimestamp = new Date().toISOString();
+
+      // Update transaction status
       const { error: txnError } = await supabase
         .from("transactions")
         .update({
           status: "completed",
-          approved_at: new Date().toISOString(),
-          completed_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+          approved_at: approvalTimestamp,
+          completed_at: approvalTimestamp,
+          updated_at: approvalTimestamp,
         })
         .eq("id", txn.id);
 
       if (txnError) throw txnError;
 
-      if (!isLoanTransaction) {
-        const fromAccount = accounts.find((a) => a.id === txn.from_account_id);
-
-        if (fromAccount) {
-          let newBalance = fromAccount.balance;
-
-          if (isCreditTransaction) {
-            newBalance =
-              parseFloat(fromAccount.balance) + parseFloat(txn.amount);
-          } else {
-            newBalance =
-              parseFloat(fromAccount.balance) - parseFloat(txn.amount);
-          }
-
-          const { error: accError } = await supabase
-            .from("accounts")
+      // Apply balance changes if not a loan
+      if (!isLoan) {
+        try {
+          await applyBalanceChanges({
+            ...txn,
+            status: "completed",
+          });
+        } catch (balanceErr) {
+          // Revert status if balance update fails
+          await supabase
+            .from("transactions")
             .update({
-              balance: newBalance,
-              available_balance: newBalance,
+              status: "pending",
+              approved_at: null,
+              completed_at: null,
               updated_at: new Date().toISOString(),
             })
-            .eq("id", txn.from_account_id);
+            .eq("id", txn.id);
 
-          if (accError) throw accError;
-
-          setAccounts((prev) =>
-            prev.map((acc) =>
-              acc.id === txn.from_account_id
-                ? { ...acc, balance: newBalance, available_balance: newBalance }
-                : acc
-            )
-          );
+          throw new Error(`Balance update failed: ${balanceErr.message}`);
         }
       }
 
@@ -1296,9 +1923,9 @@ const TransactionsPage = () => {
             ? {
                 ...t,
                 status: "completed",
-                approved_at: new Date().toISOString(),
-                completed_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
+                approved_at: approvalTimestamp,
+                completed_at: approvalTimestamp,
+                updated_at: approvalTimestamp,
               }
             : t
         )
@@ -1307,13 +1934,13 @@ const TransactionsPage = () => {
       setMessage({
         type: "success",
         text: `✅ Transaction approved! ${
-          isLoanTransaction ? "(Loan - balance unchanged)" : ""
+          isLoan ? "(Loan - balance unchanged)" : "(Balance updated)"
         }`,
       });
       setApprovingTransaction(null);
       setTimeout(() => setMessage({ type: "", text: "" }), 4000);
     } catch (err) {
-      console.error("[ADMIN_TRANSACTIONS] Approve error:", err.message);
+      console.error("[APPROVE_TRANSACTION]", err.message);
       setMessage({
         type: "error",
         text: `Failed to approve transaction: ${err.message}`,
@@ -1323,9 +1950,9 @@ const TransactionsPage = () => {
     }
   };
 
-  // ============================================================================
+  // ========================================================================
   // REJECT TRANSACTION
-  // ============================================================================
+  // ========================================================================
 
   const handleRejectTransaction = async () => {
     setSubmitting(true);
@@ -1361,7 +1988,7 @@ const TransactionsPage = () => {
       setApprovingTransaction(null);
       setTimeout(() => setMessage({ type: "", text: "" }), 3000);
     } catch (err) {
-      console.error("[ADMIN_TRANSACTIONS] Reject error:", err.message);
+      console.error("[REJECT_TRANSACTION]", err.message);
       setMessage({
         type: "error",
         text: `Failed to reject transaction: ${err.message}`,
@@ -1371,32 +1998,37 @@ const TransactionsPage = () => {
     }
   };
 
-  // ============================================================================
-  // DELETE TRANSACTION
-  // ============================================================================
+  // ========================================================================
+  // DELETE TRANSACTION WITH BALANCE REVERSAL
+  // ========================================================================
 
   const handleDeleteTransaction = async () => {
     setSubmitting(true);
     try {
+      const txn = deletingTransaction;
+
+      // Reverse balance if transaction was completed
+      if (txn.status === "completed") {
+        await reverseBalanceChanges(txn);
+      }
+
       const { error } = await supabase
         .from("transactions")
         .delete()
-        .eq("id", deletingTransaction.id);
+        .eq("id", txn.id);
 
       if (error) throw error;
 
-      setTransactions((prev) =>
-        prev.filter((t) => t.id !== deletingTransaction.id)
-      );
+      setTransactions((prev) => prev.filter((t) => t.id !== txn.id));
 
       setMessage({
         type: "success",
-        text: "✅ Transaction deleted successfully",
+        text: "✅ Transaction deleted and balance reversed",
       });
       setDeletingTransaction(null);
       setTimeout(() => setMessage({ type: "", text: "" }), 3000);
     } catch (err) {
-      console.error("[ADMIN_TRANSACTIONS] Delete error:", err.message);
+      console.error("[DELETE_TRANSACTION]", err.message);
       setMessage({
         type: "error",
         text: `Failed to delete transaction: ${err.message}`,
@@ -1406,9 +2038,9 @@ const TransactionsPage = () => {
     }
   };
 
-  // ============================================================================
+  // ========================================================================
   // SEARCH & FILTER
-  // ============================================================================
+  // ========================================================================
 
   const filteredTransactions = transactions.filter((txn) => {
     const matchesSearch =
@@ -1438,9 +2070,9 @@ const TransactionsPage = () => {
     });
   };
 
-  // ============================================================================
+  // ========================================================================
   // RENDER
-  // ============================================================================
+  // ========================================================================
 
   if (!isAuthenticated) {
     return (
@@ -1472,7 +2104,7 @@ const TransactionsPage = () => {
               </h1>
               <p className="text-sm text-secondary opacity-70">
                 Create, edit, approve, and manage all transactions with full
-                timestamp control
+                timestamp control and balance validation
               </p>
             </div>
 
@@ -1580,9 +2212,12 @@ const TransactionsPage = () => {
                           className="hover:bg-secondary hover:bg-opacity-5 transition-colors"
                         >
                           <td className="px-6 py-4">
-                            <span className="font-mono text-sm text-basic font-semibold">
+                            <button
+                              onClick={() => setViewingTransaction(txn)}
+                              className="font-mono text-sm text-basic font-semibold hover:underline cursor-pointer"
+                            >
                               {txn.reference_number}
-                            </span>
+                            </button>
                           </td>
                           <td className="px-6 py-4 text-sm text-secondary opacity-70">
                             {getAccountNumber(txn.from_account_id)}
@@ -1594,7 +2229,7 @@ const TransactionsPage = () => {
                           </td>
                           <td className="px-6 py-4 text-sm text-secondary opacity-70">
                             <span className="capitalize">
-                              {txn.transaction_type.replace("_", " ")}
+                              {txn.transaction_type.replace(/_/g, " ")}
                             </span>
                           </td>
                           <td className="px-6 py-4">
@@ -1623,6 +2258,13 @@ const TransactionsPage = () => {
                           </td>
                           <td className="px-6 py-4 text-right">
                             <div className="flex items-center justify-end gap-2">
+                              <button
+                                onClick={() => setViewingTransaction(txn)}
+                                className="p-2 hover:bg-basic hover:bg-opacity-10 rounded-sm transition-all"
+                                title="View transaction details"
+                              >
+                                <EyeIcon />
+                              </button>
                               {txn.status === "pending" && (
                                 <button
                                   onClick={() => setApprovingTransaction(txn)}
@@ -1632,15 +2274,14 @@ const TransactionsPage = () => {
                                   <ApproveIcon />
                                 </button>
                               )}
-                              {txn.status !== "completed" && (
-                                <button
-                                  onClick={() => setEditingTransaction(txn)}
-                                  className="p-2 hover:bg-basic hover:bg-opacity-10 rounded-sm transition-all"
-                                  title="Edit transaction"
-                                >
-                                  <EditIcon />
-                                </button>
-                              )}
+                              {/* NEW - Always show edit button */}
+                              <button
+                                onClick={() => setEditingTransaction(txn)}
+                                className="p-2 hover:bg-basic hover:bg-opacity-10 rounded-sm transition-all"
+                                title="Edit transaction details"
+                              >
+                                <EditIcon />
+                              </button>
                               <button
                                 onClick={() => setDeletingTransaction(txn)}
                                 className="p-2 hover:bg-red-500 hover:bg-opacity-10 rounded-sm transition-all text-red-600"
@@ -1664,8 +2305,11 @@ const TransactionsPage = () => {
                       className="p-4 hover:bg-secondary hover:bg-opacity-5 transition-colors"
                     >
                       <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <p className="font-mono font-semibold text-basic text-sm">
+                        <div
+                          className="flex-1 cursor-pointer"
+                          onClick={() => setViewingTransaction(txn)}
+                        >
+                          <p className="font-mono font-semibold text-basic text-sm hover:underline">
                             {txn.reference_number}
                           </p>
                           <p className="text-xs text-secondary opacity-60 mt-1">
@@ -1673,7 +2317,7 @@ const TransactionsPage = () => {
                           </p>
                         </div>
                         <span
-                          className={`px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${
+                          className={`px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap ml-2 ${
                             txn.status === "completed"
                               ? "bg-green-100 text-green-800"
                               : txn.status === "pending"
@@ -1698,7 +2342,7 @@ const TransactionsPage = () => {
                         <div>
                           <p className="text-secondary opacity-60">Type</p>
                           <p className="font-semibold text-secondary capitalize">
-                            {txn.transaction_type.replace("_", " ")}
+                            {txn.transaction_type.replace(/_/g, " ")}
                           </p>
                         </div>
                         <div>
@@ -1716,6 +2360,12 @@ const TransactionsPage = () => {
                       </div>
 
                       <div className="flex gap-2 pt-3 border-t border-secondary">
+                        <button
+                          onClick={() => setViewingTransaction(txn)}
+                          className="flex-1 py-2 px-3 text-xs font-semibold border border-secondary text-secondary rounded-sm hover:bg-secondary hover:bg-opacity-5 transition-all flex items-center justify-center gap-1"
+                        >
+                          <EyeIcon /> View
+                        </button>
                         {txn.status === "pending" && (
                           <button
                             onClick={() => setApprovingTransaction(txn)}
@@ -1724,14 +2374,15 @@ const TransactionsPage = () => {
                             <ApproveIcon /> Approve
                           </button>
                         )}
-                        {txn.status !== "completed" && (
+                        {
                           <button
                             onClick={() => setEditingTransaction(txn)}
-                            className="flex-1 py-2 px-3 text-xs font-semibold border border-secondary text-secondary rounded-sm hover:bg-secondary hover:bg-opacity-5 transition-all flex items-center justify-center gap-1"
+                            className="p-2 hover:bg-basic hover:bg-opacity-10 rounded-sm transition-all"
+                            title="Edit transaction details"
                           >
-                            <EditIcon /> Edit
+                            <EditIcon />
                           </button>
-                        )}
+                        }
                         <button
                           onClick={() => setDeletingTransaction(txn)}
                           className="flex-1 py-2 px-3 text-xs font-semibold bg-red-100 text-red-600 rounded-sm hover:bg-red-200 transition-all flex items-center justify-center gap-1"
@@ -1810,6 +2461,18 @@ const TransactionsPage = () => {
           onClose={() => setShowCreateModal(false)}
           onSubmit={handleCreateTransaction}
           submitting={submitting}
+        />
+      )}
+
+      {viewingTransaction && (
+        <TransactionDetailModal
+          transaction={viewingTransaction}
+          accounts={accounts}
+          onClose={() => setViewingTransaction(null)}
+          onEditClick={() => {
+            setViewingTransaction(null);
+            setEditingTransaction(viewingTransaction);
+          }}
         />
       )}
 
