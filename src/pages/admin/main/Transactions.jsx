@@ -1416,6 +1416,36 @@ const TransactionsPage = () => {
         throw new Error("Source account not found");
       }
 
+      // CREDIT FIRST: Deposit, Tax Refund - Add to balance
+      if (isCredit) {
+        const { error } = await supabase
+          .from("accounts")
+          .update({
+            balance: freshFromAccount.balance + formData.amount,
+            available_balance:
+              freshFromAccount.available_balance + formData.amount,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", formData.from_account_id);
+
+        if (error) throw error;
+
+        setAccounts((prev) =>
+          prev.map((acc) =>
+            acc.id === formData.from_account_id
+              ? {
+                  ...acc,
+                  balance: freshFromAccount.balance + formData.amount,
+                  available_balance:
+                    freshFromAccount.available_balance + formData.amount,
+                  updated_at: new Date().toISOString(),
+                }
+              : acc
+          )
+        );
+        return;
+      }
+
       // TRANSFER: Debit from source, credit to destination
       if (formData.transaction_type === "transfer") {
         const freshToAccount = freshAccounts.find(
@@ -1486,9 +1516,11 @@ const TransactionsPage = () => {
             return acc;
           })
         );
+        return;
       }
+
       // DEBIT (Withdrawal, Payment, External Transfer): Subtract from balance
-      else if (isDebit) {
+      if (isDebit) {
         if (freshFromAccount.balance < formData.amount) {
           throw new Error(
             `Insufficient balance. Available: ${
@@ -1519,34 +1551,6 @@ const TransactionsPage = () => {
                   balance: freshFromAccount.balance - formData.amount,
                   available_balance:
                     freshFromAccount.available_balance - formData.amount,
-                  updated_at: new Date().toISOString(),
-                }
-              : acc
-          )
-        );
-      }
-      // CREDIT (Deposit, Tax Refund): Add to balance
-      else if (isCredit) {
-        const { error } = await supabase
-          .from("accounts")
-          .update({
-            balance: freshFromAccount.balance + formData.amount,
-            available_balance:
-              freshFromAccount.available_balance + formData.amount,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", formData.from_account_id);
-
-        if (error) throw error;
-
-        setAccounts((prev) =>
-          prev.map((acc) =>
-            acc.id === formData.from_account_id
-              ? {
-                  ...acc,
-                  balance: freshFromAccount.balance + formData.amount,
-                  available_balance:
-                    freshFromAccount.available_balance + formData.amount,
                   updated_at: new Date().toISOString(),
                 }
               : acc
@@ -1700,30 +1704,39 @@ const TransactionsPage = () => {
         }
       }
 
-      const { data, error } = await supabase.from("transactions").insert([
-        {
-          from_account_id: formData.from_account_id,
-          to_account_id: formData.to_account_id || null,
-          external_recipient_name: formData.external_recipient_name || null,
-          external_recipient_iban: formData.external_recipient_iban || null,
-          amount: formData.amount,
-          currency: formData.currency,
-          transaction_type: formData.transaction_type,
-          status: formData.status,
-          description: formData.description || null,
-          reference_number: referenceNumber,
-          failure_reason: formData.failure_reason || null,
-          created_at: formData.created_at,
-          approved_at: formData.approved_at || null,
-          completed_at: formData.completed_at || null,
-          metadata: {
-            created_by: "admin",
-            initiated_at: new Date().toISOString(),
+      const { data, error } = await supabase
+        .from("transactions")
+        .insert([
+          {
+            from_account_id: formData.from_account_id,
+            to_account_id: formData.to_account_id || null,
+            external_recipient_name: formData.external_recipient_name || null,
+            external_recipient_iban: formData.external_recipient_iban || null,
+            amount: formData.amount,
+            currency: formData.currency,
+            transaction_type: formData.transaction_type,
+            status: formData.status,
+            description: formData.description || null,
+            reference_number: referenceNumber,
+            failure_reason: formData.failure_reason || null,
+            created_at: formData.created_at,
+            approved_at: formData.approved_at || null,
+            completed_at: formData.completed_at || null,
+            metadata: {
+              created_by: "admin",
+              initiated_at: new Date().toISOString(),
+            },
           },
-        },
-      ]);
+        ])
+        .select();
 
       if (error) throw error;
+
+      if (!data || data.length === 0) {
+        throw new Error("Transaction was created but response is empty");
+      }
+
+      const newTransaction = data[0];
 
       // If completed, update balances immediately
       if (formData.status === "completed") {
@@ -1731,12 +1744,15 @@ const TransactionsPage = () => {
           await applyBalanceChanges(formData);
         } catch (balanceErr) {
           // Delete transaction if balance update fails
-          await supabase.from("transactions").delete().eq("id", data[0].id);
+          await supabase
+            .from("transactions")
+            .delete()
+            .eq("id", newTransaction.id);
           throw new Error(`Balance update failed: ${balanceErr.message}`);
         }
       }
 
-      setTransactions((prev) => [data[0], ...prev]);
+      setTransactions((prev) => [newTransaction, ...prev]);
 
       setMessage({
         type: "success",
@@ -2154,14 +2170,13 @@ const TransactionsPage = () => {
               {/* Create Button */}
               <button
                 onClick={() => setShowCreateModal(true)}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-basic text-primary font-semibold rounded-sm hover:bg-opacity-90 transition-all active:scale-95 whitespace-nowrap"
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-basic text-primary font-semibold rounded-sm hover:bg-opacity-90 transition-all whitespace-nowrap"
               >
-                <PlusIcon />
-                <span>Create Transaction</span>
+                <PlusIcon /> Create Transaction
               </button>
             </div>
 
-            {/* Transactions Table/Grid */}
+            {/* Transactions Table/Cards */}
             {loading ? (
               <div className="flex items-center justify-center py-16">
                 <LoadingSpinner size="lg" />
@@ -2274,7 +2289,6 @@ const TransactionsPage = () => {
                                   <ApproveIcon />
                                 </button>
                               )}
-                              {/* NEW - Always show edit button */}
                               <button
                                 onClick={() => setEditingTransaction(txn)}
                                 className="p-2 hover:bg-basic hover:bg-opacity-10 rounded-sm transition-all"
@@ -2374,15 +2388,12 @@ const TransactionsPage = () => {
                             <ApproveIcon /> Approve
                           </button>
                         )}
-                        {
-                          <button
-                            onClick={() => setEditingTransaction(txn)}
-                            className="p-2 hover:bg-basic hover:bg-opacity-10 rounded-sm transition-all"
-                            title="Edit transaction details"
-                          >
-                            <EditIcon />
-                          </button>
-                        }
+                        <button
+                          onClick={() => setEditingTransaction(txn)}
+                          className="flex-1 py-2 px-3 text-xs font-semibold border border-secondary text-secondary rounded-sm hover:bg-secondary hover:bg-opacity-5 transition-all flex items-center justify-center gap-1"
+                        >
+                          <EditIcon /> Edit
+                        </button>
                         <button
                           onClick={() => setDeletingTransaction(txn)}
                           className="flex-1 py-2 px-3 text-xs font-semibold bg-red-100 text-red-600 rounded-sm hover:bg-red-200 transition-all flex items-center justify-center gap-1"
